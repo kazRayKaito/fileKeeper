@@ -6,7 +6,7 @@ from datetime import datetime as dt
 todaysdate = dt.now()
 todaysdateStamp = todaysdate.strftime("%Y-%m-%d")
 
-rootDir = "/Volumes/raySSD2T/Data/rootFolder"
+rootDir = "C:/Users/Kazuk/Documents/2_Projects/fileControl2"
 dirListPath = os.getcwd() + "/dirList.csv"
 
 print(dirListPath)
