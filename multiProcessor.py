@@ -1,7 +1,11 @@
 import os
+import sys
 import multiprocessing
 import dirRenamer
 from datetime import datetime as dt
+
+#環境設定
+sys.dont_write_bytecode = True
 
 todaysdate = dt.now()
 todaysdateStamp = todaysdate.strftime("%Y-%m-%d")

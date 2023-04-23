@@ -1,8 +1,12 @@
 import os
+import sys
 import shutil
 import timeKeeper
 from datetime import datetime as dt
 from datetime import timedelta as td
+
+#環境設定
+sys.dont_write_bytecode = True
 
 #変数定義
 datetimeToday = dt.now()

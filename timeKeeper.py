@@ -1,6 +1,10 @@
 import os
+import sys
 from datetime import datetime as dt
 from datetime import timedelta as td
+
+#環境設定
+sys.dont_write_bytecode = True
 
 #曜日別のNASへのアクセスが許可されている時間帯（設定）
 allowedTimeHourList = [

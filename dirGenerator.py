@@ -1,10 +1,14 @@
 import os
+import sys
 import random
 import math
 from datetime import datetime as dt
 from datetime import timedelta as td
 from subprocess import call
 import pywintypes, win32file, win32con
+
+#環境設定
+sys.dont_write_bytecode = True
 
 todaysdate = dt.now()
 todaysdateStamp = todaysdate.strftime("%Y-%m-%d")
