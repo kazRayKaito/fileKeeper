@@ -3,6 +3,7 @@ import sys
 import random
 import math
 import time
+from logging import getLogger
 from datetime import datetime as dt
 from datetime import timedelta as td
 from subprocess import call
@@ -10,6 +11,9 @@ import pywintypes, win32file, win32con
 
 #環境設定
 sys.dont_write_bytecode = True
+
+#ロガー設定
+logger = getLogger("main").getChild("generator")
 
 #日付取得
 todaysdate = dt.now()
@@ -73,7 +77,7 @@ def generate(rootDir, runningOS = "Windows"):
         months.append(month)
         dirName = rootDir + "/" + str(month)
         if os.path.isdir(dirName):
-            print(dirName + " does exist")
+            logger.info(dirName + " does exist")
         else:
             os.mkdir(dirName)
         
@@ -82,12 +86,12 @@ def generate(rootDir, runningOS = "Windows"):
             filePath = os.path.join(dirName,fileName)
 
             if os.path.isfile(filePath) == False:
-                print("File does NOT exitst")
+                logger.info("File does NOT exitst")
                 with open(dirName + "/" + fileName, "w") as f:
                     f.write("New File Generated!")
 
             if os.path.isfile(filePath):
-                print("File does exist:" + dirName+"/"+fileName)
+                logger.info("File does exist:" + dirName+"/"+fileName)
                 randomDays = math.floor(random.random()*30)
                 newDate = todaysdate - td(days = (month * 30 + randomDays/30))
 

@@ -1,13 +1,39 @@
+#環境設定
 import os
 import sys
+from datetime import datetime as dt
+sys.dont_write_bytecode = True
+
+#日付取得
+timenow = dt.now()
+timeStamp = timenow.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
+
+#ロガー設定
+import logging
+logger = logging.getLogger("main")
+logger.setLevel(logging.DEBUG)
+
+#ログフォルダ生成
+logFolder = os.getcwd()+"/log"
+if not os.path.isdir(logFolder):
+    os.mkdir(logFolder)
+
+#ロガーフォーマット
+h = logging.FileHandler("log/"+timeStamp+"_logtest.log")
+fmt = logging.Formatter(
+    '%(asctime)s:'
+    '%(name)s:'
+    '%(levelname)s:'
+    '%(message)s'
+)
+h.setFormatter(fmt)
+logger.addHandler(h)
+
+#モジュールインポート
 import dirRenamer
 import dirRemover
 import dirGenerator
 from multiprocessing import Pool
-from datetime import datetime as dt
-
-#環境設定
-sys.dont_write_bytecode = True
 
 #変数設定
 modeIndex = 2
@@ -25,7 +51,10 @@ def startProcessing(mode):
 
     #dirListの場所確認
     dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-    print(dirListPath)
+    logger.debug(dirListPath)
+    if not os.path.isfile(dirListPath):
+        logger.error("'dirList.csv'が見つかりません。")
+        return
 
     #dirList.csvを開いて、1行ずつ読み込み
     f = open(dirListPath, 'r')
@@ -51,9 +80,8 @@ def startProcessing(mode):
     elif mode == "dirRemoval":
         p.map(dirRemover.remove, multiProcessArgs)
 
-#----------------------------------動作確認用----------------------------------
+#----------------------------------実行----------------------------------
 if __name__ == "__main__":
-    print("running as main")
-
+    logger.debug("running as main. mode:"+mode)
     startProcessing(mode)
-#----------------------------------動作確認用----------------------------------
+#----------------------------------実行----------------------------------

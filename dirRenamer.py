@@ -1,10 +1,14 @@
 import os
 import sys
 import timeKeeper
+from logging import getLogger
 from datetime import datetime as dt
 
 #環境設定
 sys.dont_write_bytecode = True
+
+#ロガー設定
+logger = getLogger("main").getChild("renamer")
 
 def rename(items):
     #引数分解
@@ -13,16 +17,19 @@ def rename(items):
     preservationDays = items[2]
     monthlyArchiveNumber = items[3]
 
+    logger.warning("移動開始:"+rootPath)
+
     #変数定義
     datetimeToday = dt.now()
     
     #NASアクセス許可時間帯確認
     if timeKeeper.checkIfOutofTime():
+        logger.error("移動中断_アクセス許可時間外エラー")
         return
     
     #事前確認
     if os.path.isdir(rootPath) == False:
-        print("rootPath does NOT exist.")
+        logger.error("移動中断_該当フォルダ無し")
         return
     
     #変数定義
@@ -44,6 +51,11 @@ def rename(items):
         for dir in dirList:
             #各フォルダで名前変更処理実行
 
+            #現在時刻とNASアクセス許可時間帯確認
+            if timeKeeper.checkIfOutofTime():
+                logger.error("移動中断_アクセス許可時間外エラー")
+                return
+
             #特殊なフォルダは飛ばす
             if dir[0:2] == "[_":    
                 continue
@@ -53,7 +65,7 @@ def rename(items):
                 fileListTemp = os.listdir(dirFullPath)
                 fileList = [f for f in fileListTemp if os.path.isfile(os.path.join(rootPath,dir,f))]
                 if len(fileListTemp) != len(fileList):
-                    print(dirFullPath + "内でフォルダ確認。中止")
+                    logger.error("移動中断_フォルダ構造エラー:"+dirFullPath + "内でフォルダ確認")
                     continue
 
                 #変数定義
@@ -81,10 +93,11 @@ def rename(items):
                 if latestDateWithin14Days == False:
                     try:
                         os.rename(dirFullPath, dirNewFullPath)
-                        print("new folder name " + dirNewFullPath)
+                        logger.info("フォルダ移動中:" + dirNewFullPath)
                     except FileExistsError:
-                        print("File Exists")
-
+                        logger.error("移動失敗:FileExistsError")
+    
+    logger.warning("移動終了:"+rootPath)
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":
@@ -96,6 +109,7 @@ if __name__ == "__main__":
     dirListLines = f.readlines()[1:]
 
     for dirListLine in dirListLines:
+        
         #各行をカンマで分割し、変数代入
         items = dirListLine.split(',')
         rename(items)
