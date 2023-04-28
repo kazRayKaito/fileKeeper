@@ -11,53 +11,9 @@ import pywintypes, win32file, win32con
 #環境設定
 sys.dont_write_bytecode = True
 
-#引数確認
-nArgs = len(sys.argv)
-emptyArgv = False
-if nArgs == 1:
-    emptyArgv = True
-
 #日付取得
 todaysdate = dt.now()
 todaysdateStamp = todaysdate.strftime("%Y-%m-%d")
-
-#パス生成
-runningOS = "Windows"
-rootDir = "C:/Users/Kazuk/Documents/2_Projects/VSCode/fileKeeperDirExample"
-if emptyArgv:
-    subrootDir = rootDir + "/dir1"
-else:
-    subrootDir = rootDir + "/dir" + sys.argv[1]
-
-if os.path.isdir(rootDir) == False:
-    print("rootDir does NOT exist.")
-    exit()
-
-if os.path.isdir(subrootDir) == False:
-    os.mkdir(subrootDir)
-
-monthCount = 30
-months = []
-
-files = ["fileA.txt",
-         "fileB.txt",
-         "fileC.txt",
-         "fileD.txt",
-         "fileE.txt",
-         "fileF.txt",
-         "fileG.txt",
-         "fileH.txt",
-         "fileI.txt",
-         "fileJ.txt",
-         "fileK.txt",
-         "fileL.txt",
-         "fileM.txt",
-         "fileN.txt",
-         "fileO.txt",
-         "fileP.txt",
-         "fileQ.txt",
-         "fileR.txt",
-         "fileS.txt"]
 
 def changeFileDateOnWindows(filePath, newDate):
     wintime = pywintypes.Time(newDate)
@@ -81,33 +37,78 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-for month in range(0, monthCount + 1):
-    months.append(month)
-    dirName = subrootDir + "/" + str(month)
-    if os.path.isdir(dirName):
-        print(dirName + " does exist")
-    else:
-        os.mkdir(dirName)
-    
-    for fileName in files:
-        #ファイルパス定義
-        filePath = os.path.join(dirName,fileName)
+def generate(rootDir, runningOS = "Windows"):
+    if os.path.isdir(os.path.dirname(rootDir)) == False:
+        print("Parent Directory does NOT exist at " + os.path.dirname(rootDir))
+        return()
 
-        if os.path.isfile(filePath) == False:
-            print("File does NOT exitst")
-            with open(dirName + "/" + fileName, "w") as f:
-                f.write("New File Generated!")
+    if os.path.isdir(rootDir) == False:
+        os.mkdir(rootDir)
 
-        if os.path.isfile(filePath):
-            print("File does exist:" + dirName+"/"+fileName)
-            randomDays = math.floor(random.random()*30)
-            newDate = todaysdate - td(days = (month * 1 + randomDays/30))
+    monthCount = 30
+    months = []
 
-            if runningOS == "Mac":
-                changeFileDateOnMac(filePath, newDate)
-            #elif runningOS == "Windows":
-                #changeFileDateOnWindows(filePath, newDate)
+    files = ["fileA.txt",
+            "fileB.txt",
+            "fileC.txt",
+            "fileD.txt",
+            "fileE.txt",
+            "fileF.txt",
+            "fileG.txt",
+            "fileH.txt",
+            "fileI.txt",
+            "fileJ.txt",
+            "fileK.txt",
+            "fileL.txt",
+            "fileM.txt",
+            "fileN.txt",
+            "fileO.txt",
+            "fileP.txt",
+            "fileQ.txt",
+            "fileR.txt",
+            "fileS.txt"]
 
-print("Hello")
-time.sleep(1)
-print("Bye")
+
+    for month in range(0, monthCount + 1):
+        months.append(month)
+        dirName = rootDir + "/" + str(month)
+        if os.path.isdir(dirName):
+            print(dirName + " does exist")
+        else:
+            os.mkdir(dirName)
+        
+        for fileName in files:
+            #ファイルパス定義
+            filePath = os.path.join(dirName,fileName)
+
+            if os.path.isfile(filePath) == False:
+                print("File does NOT exitst")
+                with open(dirName + "/" + fileName, "w") as f:
+                    f.write("New File Generated!")
+
+            if os.path.isfile(filePath):
+                print("File does exist:" + dirName+"/"+fileName)
+                randomDays = math.floor(random.random()*30)
+                newDate = todaysdate - td(days = (month * 30 + randomDays/30))
+
+                if runningOS == "Mac":
+                    changeFileDateOnMac(filePath, newDate)
+                elif runningOS == "Windows":
+                    changeFileDateOnWindows(filePath, newDate)
+
+#----------------------------------動作確認用----------------------------------
+if __name__ == "__main__":
+    print("running as main")
+
+    dirListPath = os.path.join(os.getcwd(), "dirList.csv")
+    print(dirListPath)
+
+    #dirList.csvを開いて、1行ずつ読み込み
+    f = open(dirListPath, 'r')
+    dirListLines = f.readlines()[1:]
+
+    for dirListLine in dirListLines:
+        #各行をカンマで分割し、変数代入
+        rootPath = dirListLine.split(',')[0]
+        generate(rootPath)
+#----------------------------------動作確認用----------------------------------

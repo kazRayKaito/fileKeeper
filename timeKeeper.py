@@ -33,12 +33,14 @@ def checkIfOutofTime(offsetHour = 0):
     allowedEndTime = allowedTimeHourList[weekday][1]
 
     #判定
-    allowed = not ((currentTime.hour >= allowedStartTime) and (currentTime.hour < allowedEndTime))
+    notAllowed = not ((currentTime.hour >= allowedStartTime) and (currentTime.hour < allowedEndTime))
     
     #デバッグ用
     #print(str(currentTime) + ":" + str(allowed))
 
-    return allowed
+    #デバッグ用に常時許可
+    return False
+    return notAllowed
 
  #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":

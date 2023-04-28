@@ -11,7 +11,13 @@ sys.dont_write_bytecode = True
 #変数定義
 datetimeToday = dt.now()
 
-def remove(rootPath, folderStructure, preservationDays, monthlyArchiveNumber):
+def remove(items):
+    #引数分解
+    rootPath = items[0]
+    folderStructure = items[1]
+    preservationDays = items[2]
+    monthlyArchiveNumber = items[3]
+
     #NASアクセス許可時間帯確認
     if timeKeeper.checkIfOutofTime():
         return
@@ -64,28 +70,20 @@ def remove(rootPath, folderStructure, preservationDays, monthlyArchiveNumber):
                         shutil.rmtree(os.path.join(monthlyFolderFullname,dirName))
                 
                 #空のフォルダ削除
+                print("deleting folder:" + monthlyFolderFullname)
                 shutil.rmtree(monthlyFolderFullname)
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":
     print("running as main")
 
-    rootDir = "C:\\Users\\Kazuk\\Documents\\2_Projects\\fileControl2"
-    dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-
-    print(dirListPath)
-
     #dirList.csvを開いて、1行ずつ読み込み
+    dirListPath = os.path.join(os.getcwd(), "dirList.csv")
     f = open(dirListPath, 'r')
-    dirListLines = f.readlines()
+    dirListLines = f.readlines()[1:]
 
     for dirListLine in dirListLines:
         #各行をカンマで分割し、変数代入
         items = dirListLine.split(',')
-        rootPath = items[0]
-        folderStructure = items[1]
-        preservationDays = items[2]
-        monthlyArchiveNumber = items[3]
-        
-        remove(rootPath, folderStructure, preservationDays, monthlyArchiveNumber)
+        remove(items)
 #----------------------------------動作確認用----------------------------------
