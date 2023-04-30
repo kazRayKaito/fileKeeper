@@ -3,7 +3,7 @@ import sys
 import random
 import math
 import time
-from logging import getLogger
+import logging
 from datetime import datetime as dt
 from datetime import timedelta as td
 from subprocess import call
@@ -13,7 +13,7 @@ import pywintypes, win32file, win32con
 sys.dont_write_bytecode = True
 
 #ロガー設定
-logger = getLogger("main").getChild("generator")
+logger = logging.getLogger("main").getChild("generator")
 
 #日付取得
 todaysdate = dt.now()
@@ -41,7 +41,15 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-def generate(rootDir, runningOS = "Windows"):
+def generate(items):
+    #引数分解
+    name = items[0] + "_" + items[1] + "_" + items[2]
+    rootDir = items[3]
+    folderStructure = items[4]
+    preservationDays = items[5]
+    monthlyArchiveNumber = items[6]
+    runningOS = "Windows"
+    
     if os.path.isdir(os.path.dirname(rootDir)) == False:
         print("Parent Directory does NOT exist at " + os.path.dirname(rootDir))
         return()

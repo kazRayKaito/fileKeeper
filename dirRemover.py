@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 import timeKeeper
-from logging import getLogger
+import logging
 from datetime import datetime as dt
 from datetime import timedelta as td
 
@@ -10,17 +10,18 @@ from datetime import timedelta as td
 sys.dont_write_bytecode = True
 
 #ロガー設定
-logger = getLogger("main").getChild("remover")
+logger = logging.getLogger("main").getChild("remover")
 
 #変数定義
 datetimeToday = dt.now()
 
 def remove(items):
     #引数分解
-    rootPath = items[0]
-    folderStructure = items[1]
-    preservationDays = items[2]
-    monthlyArchiveNumber = items[3]
+    name = items[0] + "_" + items[1] + "_" + items[2]
+    rootPath = items[3]
+    folderStructure = items[4]
+    preservationDays = items[5]
+    monthlyArchiveNumber = items[6]
     
     #安全の為、rootPathを長期保存用フォルダパスへ変更
     rootPath = os.path.join(rootPath, "[_長期保存用フォルダ_]")
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     dirListLines = f.readlines()[1:]
 
     for dirListLine in dirListLines:
-        
+
         #各行をカンマで分割し、変数代入
         items = dirListLine.split(',')
         remove(items)

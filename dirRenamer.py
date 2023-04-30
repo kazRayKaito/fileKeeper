@@ -1,21 +1,25 @@
 import os
 import sys
 import timeKeeper
-from logging import getLogger
+import logging
 from datetime import datetime as dt
 
 #環境設定
 sys.dont_write_bytecode = True
 
 #ロガー設定
-logger = getLogger("main").getChild("renamer")
+logger = logging.getLogger("main").getChild("renamer")
 
 def rename(items):
     #引数分解
-    rootPath = items[0]
-    folderStructure = items[1]
-    preservationDays = items[2]
-    monthlyArchiveNumber = items[3]
+    name = items[0] + "_" + items[1] + "_" + items[2]
+    rootPath = items[3]
+    folderStructure = items[4]
+    preservationDays = items[5]
+    monthlyArchiveNumber = items[6]
+
+    #レコード保存場所整理
+
 
     logger.warning("移動開始:"+rootPath)
 
@@ -109,7 +113,7 @@ if __name__ == "__main__":
     dirListLines = f.readlines()[1:]
 
     for dirListLine in dirListLines:
-        
+
         #各行をカンマで分割し、変数代入
         items = dirListLine.split(',')
         rename(items)
