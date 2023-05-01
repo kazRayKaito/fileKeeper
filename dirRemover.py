@@ -9,19 +9,42 @@ from datetime import timedelta as td
 #環境設定
 sys.dont_write_bytecode = True
 
-#ロガー設定
-logger = logging.getLogger("main").getChild("remover")
-
 #変数定義
 datetimeToday = dt.now()
+dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
 
-def remove(items):
+def remove(items, lock):
     #引数分解
     name = items[0] + "_" + items[1] + "_" + items[2]
     rootPath = items[3]
     folderStructure = items[4]
     preservationDays = items[5]
     monthlyArchiveNumber = items[6]
+
+    #log設定
+    logger = logging.getLogger("remover_" + name)
+    logger.setLevel(logging.DEBUG)
+
+    #ルートログフォルダ生成
+    logRootDir = os.path.join(os.getcwd(),"log_フォルダ削除")
+    if not os.path.isdir(logRootDir):
+        os.mkdir(logRootDir)
+
+    #ログフォルダ生成
+    localLogFolder = os.path.join(logRootDir,name)
+    if not os.path.isdir(localLogFolder):
+        os.mkdir(localLogFolder)
+
+    #ロガーフォーマット
+    h = logging.FileHandler(os.path.join(localLogFolder,dateStamp+"_log.log"))
+    fmt = logging.Formatter(
+        '%(asctime)s:'
+        '%(name)s:'
+        '%(levelname)s:'
+        '%(message)s'
+    )
+    h.setFormatter(fmt)
+    logger.addHandler(h)
     
     #安全の為、rootPathを長期保存用フォルダパスへ変更
     rootPath = os.path.join(rootPath, "[_長期保存用フォルダ_]")
@@ -85,7 +108,7 @@ def remove(items):
                     shutil.rmtree(os.path.join(monthlyFolderFullname,dirName))
                 
                 #空のフォルダ削除
-                logger.warning("削除中:"+monthlyFolderFullname)
+                logger.info("削除中:"+monthlyFolderFullname)
                 shutil.rmtree(monthlyFolderFullname)
 
     logger.warning("削除完了:"+rootPath)

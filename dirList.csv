@@ -1,7 +1,7 @@
-フォルダパス,フォルダ構造,保存日数(558=31日*18カ月),アーカイブファイル数（ファイル数/1月）
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir1,root-folder-file,558,0
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir2,root-folder-file,558,0
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir3,root-folder-file,558,0
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir4,root-folder-file,558,0
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir5,root-folder-file,558,0
-C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir6,root-folder-file,558,0
+大分類,中分類,小分類,フォルダパス,フォルダ構造,保存日数(558=31日*18カ月),アーカイブファイル数（ファイル数/1月）
+DivA,SubA,Det1,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir1,root-folder-file,558,0
+DivA,SubB,Div1,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir2,root-folder-file,558,0
+DivB,SubA,Div1,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir3,root-folder-file,558,0
+DivB,SubA,Div2,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir4,root-folder-file,558,0
+DivC,SubA,Div1,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir5,root-folder-file,558,0
+DivC,SubB,Div1,C:\Users\Kazuki Kaito\Documents\Projects\rootDirName\dir6,root-folder-file,558,0

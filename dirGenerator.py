@@ -41,7 +41,7 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-def generate(items):
+def generate(items, lock):
     #引数分解
     name = items[0] + "_" + items[1] + "_" + items[2]
     rootDir = items[3]

@@ -19,7 +19,7 @@ if not os.path.isdir(logFolder):
     os.mkdir(logFolder)
 
 #ロガーフォーマット
-h = logging.FileHandler("log/"+timeStamp+"_logtest.log")
+h = logging.FileHandler("log/"+timeStamp+"_log.log")
 fmt = logging.Formatter(
     '%(asctime)s:'
     '%(name)s:'
@@ -37,13 +37,15 @@ import threading
 from multiprocessing import Pool
 
 #変数設定
-modeIndex = 2
+modeIndex = 0
 modeList = [
     "dirGeneration",
     "dirRenaming",
     "dirRemoval"
 ]
 mode = modeList[modeIndex]
+
+eachStatus = []
 
 def startProcessing(mode):
     #マルチスレッド設定
@@ -60,8 +62,10 @@ def startProcessing(mode):
     dirListLines = f.readlines()[1:]
 
     multiThreadArgs = []
+    names = []
     for dirListLine in dirListLines:
         items = dirListLine.split(',')
+        names.append(items[0] + "_" + items[1] + "_" + items[2])
         multiThreadArgs.append(items)
     if mode == "dirGeneration":
         multiThreadRun = dirGenerator.generate
@@ -70,9 +74,16 @@ def startProcessing(mode):
     elif mode == "dirRemoval":
         multiThreadRun = dirRemover.remove
 
+    global eachStatus
+
+    for name in names:
+        eachStatus.append([name,"InitialState"])
+
+    statusLock = threading.Lock()
+
     threads = []
     for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=multiThreadRun, args=[multiThreadArgs[threadIndex]]))
+        threads.append(threading.Thread(target=multiThreadRun, args=(multiThreadArgs[threadIndex],statusLock)))
     
     for thread in threads:
         thread.start()

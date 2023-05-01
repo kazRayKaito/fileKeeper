@@ -36,7 +36,7 @@ import dirGenerator
 from multiprocessing import Pool
 
 #変数設定
-modeIndex = 2
+modeIndex = 0
 modeList = [
     "dirGeneration",
     "dirRenaming",
@@ -65,7 +65,7 @@ def startProcessing(mode):
         items = dirListLine.split(',')
 
         if mode == "dirGeneration":
-            rootPath = items[0]
+            rootPath = items[3]
             multiProcessArgs.append(rootPath)
             #os.system("start cmd /c Python " + scriptDir + "/dirGenerator.py " + str(counter))
         elif mode == "dirRenaming":

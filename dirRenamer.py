@@ -7,10 +7,11 @@ from datetime import datetime as dt
 #環境設定
 sys.dont_write_bytecode = True
 
-#ロガー設定
-logger = logging.getLogger("main").getChild("renamer")
+#変数定義
+datetimeToday = dt.now()
+dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
 
-def rename(items):
+def rename(items, lock):
     #引数分解
     name = items[0] + "_" + items[1] + "_" + items[2]
     rootPath = items[3]
@@ -18,8 +19,30 @@ def rename(items):
     preservationDays = items[5]
     monthlyArchiveNumber = items[6]
 
-    #レコード保存場所整理
+    #log設定
+    logger = logging.getLogger("renamer_" + name)
+    logger.setLevel(logging.DEBUG)
 
+    #ルートログフォルダ生成
+    logRootDir = os.path.join(os.getcwd(),"log_フォルダ移動")
+    if not os.path.isdir(logRootDir):
+        os.mkdir(logRootDir)
+        
+    #ログフォルダ生成
+    localLogFolder = os.path.join(logRootDir,name)
+    if not os.path.isdir(localLogFolder):
+        os.mkdir(localLogFolder)
+
+    #ロガーフォーマット
+    h = logging.FileHandler(os.path.join(localLogFolder,dateStamp+"_log.log"))
+    fmt = logging.Formatter(
+        '%(asctime)s:'
+        '%(name)s:'
+        '%(levelname)s:'
+        '%(message)s'
+    )
+    h.setFormatter(fmt)
+    logger.addHandler(h)
 
     logger.warning("移動開始:"+rootPath)
 
