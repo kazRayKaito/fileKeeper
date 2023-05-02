@@ -41,7 +41,7 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-def generate(items, lock):
+def generate(items, lock, eachStatusIndex):
     #引数分解
     name = items[0] + "_" + items[1] + "_" + items[2]
     rootDir = items[3]
@@ -66,19 +66,7 @@ def generate(items, lock):
             "fileD.txt",
             "fileE.txt",
             "fileF.txt",
-            "fileG.txt",
-            "fileH.txt",
-            "fileI.txt",
-            "fileJ.txt",
-            "fileK.txt",
-            "fileL.txt",
-            "fileM.txt",
-            "fileN.txt",
-            "fileO.txt",
-            "fileP.txt",
-            "fileQ.txt",
-            "fileR.txt",
-            "fileS.txt"]
+            "fileG.txt"]
 
 
     for month in range(0, monthCount + 1):
@@ -101,7 +89,7 @@ def generate(items, lock):
             if os.path.isfile(filePath):
                 logger.info("File does exist:" + dirName+"/"+fileName)
                 randomDays = math.floor(random.random()*30)
-                newDate = todaysdate - td(days = (month * 30 + randomDays/30))
+                newDate = todaysdate - td(days = (month*30 + randomDays))
 
                 if runningOS == "Mac":
                     changeFileDateOnMac(filePath, newDate)

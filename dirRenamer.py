@@ -1,6 +1,7 @@
 import os
 import sys
 import timeKeeper
+import statusKeeper
 import logging
 from datetime import datetime as dt
 
@@ -11,9 +12,9 @@ sys.dont_write_bytecode = True
 datetimeToday = dt.now()
 dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
 
-def rename(items, lock):
+def rename(items, lock, eachStatusIndex):
     #引数分解
-    name = items[0] + "_" + items[1] + "_" + items[2]
+    name = items[0] + "_" + items[1] + "_" + items[2] + "_" + str(eachStatusIndex)
     rootPath = items[3]
     folderStructure = items[4]
     preservationDays = items[5]
@@ -49,11 +50,6 @@ def rename(items, lock):
     #変数定義
     datetimeToday = dt.now()
     
-    #NASアクセス許可時間帯確認
-    if timeKeeper.checkIfOutofTime():
-        logger.error("移動中断_アクセス許可時間外エラー")
-        return
-    
     #事前確認
     if os.path.isdir(rootPath) == False:
         logger.error("移動中断_該当フォルダ無し")
@@ -72,11 +68,25 @@ def rename(items, lock):
     
     #フォルダ構造が、root/サブフォルダ/ファイルとなっているパターン
     if folderStructure == "root-folder-file":
-        dirListTemp = os.listdir(rootPath)
-        dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(rootPath,d))]
 
-        for dir in dirList:
+        lock.acquire()
+        statusKeeper.eachStatus[eachStatusIndex][1] = "移動開始_フォルダ一覧取得中"
+        lock.release()
+
+        #フォルダ一覧取得（事前に時刻確認）
+        if timeKeeper.checkIfOutofTime():
+            logger.error("移動中断_アクセス許可時間外エラー")
+            return
+        else:
+            dirListTemp = os.listdir(rootPath)
+            dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(rootPath,d))]
+            folderCount = len(dirList)
+
+        for dirIndex, dir in enumerate(dirList):
             #各フォルダで名前変更処理実行
+            lock.acquire()
+            statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")"
+            lock.release()
 
             #現在時刻とNASアクセス許可時間帯確認
             if timeKeeper.checkIfOutofTime():
@@ -87,44 +97,55 @@ def rename(items, lock):
             if dir[0:2] == "[_":    
                 continue
 
+            #ファイル一覧取得（事前に時刻確認）
+            if timeKeeper.checkIfOutofTime():
+                logger.error("移動中断_アクセス許可時間外エラー")
+                return
             else:
                 dirFullPath = os.path.join(rootPath,dir)
                 fileListTemp = os.listdir(dirFullPath)
                 fileList = [f for f in fileListTemp if os.path.isfile(os.path.join(rootPath,dir,f))]
-                if len(fileListTemp) != len(fileList):
-                    logger.error("移動中断_フォルダ構造エラー:"+dirFullPath + "内でフォルダ確認")
-                    continue
+            
+            #フォルダ内にファイルしかないことを確認
+            if len(fileListTemp) != len(fileList):
+                logger.error("移動中断_フォルダ構造エラー:"+dirFullPath + "内でフォルダ確認")
+                continue
 
-                #変数定義
-                lastestDate = "0000-00-00"
-                latestMonth = ""
-                latestDateWithin14Days = False
-                for file in fileList:
-                    createdTime = os.path.getctime(os.path.join(rootPath,dir,file))
-                    strCreatedDate = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
-                    strCreatedMonth = format(dt.fromtimestamp(createdTime),"%Y-%m")
-                    if strCreatedDate > lastestDate:
-                        lastestDate = strCreatedDate
-                        latestMonth = strCreatedMonth
-                        deltaDays = (datetimeToday - dt.fromtimestamp(createdTime)).days
-                        if deltaDays < 14:
-                            latestDateWithin14Days = True
-                
-                #長期保存フォルダ内の月別フォルダの有無チェック
-                longtermPreservationMonthDir = os.path.join(longtermPreservationDir,latestMonth)
-                if os.path.isdir(longtermPreservationMonthDir) == False:
-                    os.mkdir(longtermPreservationMonthDir)
+            #最新ファイルの日付取得
+            lastestDate = "0000-00-00"
+            latestMonth = ""
+            latestDateWithin14Days = False
+            for file in fileList:
+                createdTime = os.path.getctime(os.path.join(rootPath,dir,file))
+                strCreatedDate = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
+                strCreatedMonth = format(dt.fromtimestamp(createdTime),"%Y-%m")
+                if strCreatedDate > lastestDate:
+                    lastestDate = strCreatedDate
+                    latestMonth = strCreatedMonth
+                    deltaDays = (datetimeToday - dt.fromtimestamp(createdTime)).days
+                    if deltaDays < 14:
+                        latestDateWithin14Days = True
+            
+            #長期保存フォルダ内の月別フォルダの有無チェック
+            longtermPreservationMonthDir = os.path.join(longtermPreservationDir,latestMonth)
+            if os.path.isdir(longtermPreservationMonthDir) == False:
+                os.mkdir(longtermPreservationMonthDir)
 
-                #フォルダ移動
-                dirNewFullPath = os.path.join(longtermPreservationMonthDir, dir)
-                if latestDateWithin14Days == False:
-                    try:
-                        os.rename(dirFullPath, dirNewFullPath)
-                        logger.info("フォルダ移動中:" + dirNewFullPath)
-                    except FileExistsError:
-                        logger.error("移動失敗:FileExistsError")
-    
+            #フォルダ移動
+            newDirFullPath = os.path.join(longtermPreservationMonthDir, dir)
+            if latestDateWithin14Days == False:
+                try:
+                    os.rename(dirFullPath, newDirFullPath)
+                    logger.info("フォルダ移動中:" + newDirFullPath)
+                except FileExistsError:
+                    logger.error("移動失敗:FileExistsError")
+
     logger.warning("移動終了:"+rootPath)
+    
+    lock.acquire()
+    statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ移動完了"
+    statusKeeper.eachStatus[eachStatusIndex][2] = 1
+    lock.release()
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 #環境設定
 import os
 import sys
+import time
 from datetime import datetime as dt
 sys.dont_write_bytecode = True
 
@@ -29,7 +30,10 @@ fmt = logging.Formatter(
 h.setFormatter(fmt)
 logger.addHandler(h)
 
+eachStatus = []
+
 #モジュールインポート
+import statusKeeper
 import dirRenamer
 import dirRemover
 import dirGenerator
@@ -37,15 +41,13 @@ import threading
 from multiprocessing import Pool
 
 #変数設定
-modeIndex = 0
+modeIndex = 2
 modeList = [
     "dirGeneration",
     "dirRenaming",
     "dirRemoval"
 ]
 mode = modeList[modeIndex]
-
-eachStatus = []
 
 def startProcessing(mode):
     #マルチスレッド設定
@@ -74,19 +76,48 @@ def startProcessing(mode):
     elif mode == "dirRemoval":
         multiThreadRun = dirRemover.remove
 
-    global eachStatus
+    localEachStatus = []
 
     for name in names:
-        eachStatus.append([name,"InitialState"])
+        statusKeeper.eachStatus.append([name, "開始前待機中", 0])
+        localEachStatus.append([name, "開始前待機中", 0])
 
     statusLock = threading.Lock()
 
     threads = []
     for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=multiThreadRun, args=(multiThreadArgs[threadIndex],statusLock)))
+        threads.append(threading.Thread(target=multiThreadRun, args=(multiThreadArgs[threadIndex], statusLock, threadIndex)))
     
     for thread in threads:
         thread.start()
+
+    while True:
+        statusLock.acquire()
+        for threadIndex, thread in enumerate(statusKeeper.eachStatus):
+            for itemIndex, threadIteam in enumerate(thread):
+                localEachStatus[threadIndex][itemIndex] = threadIteam
+        statusLock.release()
+
+        allDone = True
+        allClear = True
+
+        #os.system('cls')
+        for localStatus in localEachStatus:
+            print(localStatus[0] + ":" + localStatus[1])
+            if localStatus[2] == 0:
+                allDone = False
+            if localStatus[2] != 1:
+                allClear = False
+        
+        if allClear:
+            print("完了：全て正常終了")
+            break
+
+        if allDone:
+            print("終了：一部異常終了")
+            break
+        
+        time.sleep(1)
 
     for thread in threads:
         thread.join()
@@ -94,5 +125,6 @@ def startProcessing(mode):
 #----------------------------------実行----------------------------------
 if __name__ == "__main__":
     logger.debug("running as main. mode:"+mode)
+    statusKeeper.initialize()
     startProcessing(mode)
 #----------------------------------実行----------------------------------
