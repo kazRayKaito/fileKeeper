@@ -37,7 +37,7 @@ def remove(items, lock, eachStatusIndex):
         os.mkdir(localLogFolder)
 
     #ロガーフォーマット
-    h = logging.FileHandler(os.path.join(localLogFolder,dateStamp+"_log.log"))
+    h = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
     fmt = logging.Formatter(
         '%(asctime)s:'
         '%(name)s:'

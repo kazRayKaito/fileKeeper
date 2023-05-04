@@ -4,6 +4,7 @@ import random
 import math
 import time
 import logging
+import statusKeeper
 from datetime import datetime as dt
 from datetime import timedelta as td
 from subprocess import call
@@ -42,6 +43,8 @@ def changeFileDateOnMac(filePath, newDate):
     call(command, shell=True)
 
 def generate(items, lock, eachStatusIndex):
+    
+    print("generator")
     #引数分解
     name = items[0] + "_" + items[1] + "_" + items[2]
     rootDir = items[3]
@@ -95,6 +98,12 @@ def generate(items, lock, eachStatusIndex):
                     changeFileDateOnMac(filePath, newDate)
                 elif runningOS == "Windows":
                     changeFileDateOnWindows(filePath, newDate)
+    
+    
+    lock.acquire()
+    statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ生成完了"
+    statusKeeper.eachStatus[eachStatusIndex][2] = 1
+    lock.release()
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":

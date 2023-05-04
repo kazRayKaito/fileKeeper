@@ -15,20 +15,21 @@ logger = logging.getLogger("main")
 logger.setLevel(logging.DEBUG)
 
 #ログフォルダ生成
-logFolder = os.getcwd()+"/log"
+logFolder = os.path.join(os.getcwd(),"異常ログ")
 if not os.path.isdir(logFolder):
     os.mkdir(logFolder)
 
 #ロガーフォーマット
-h = logging.FileHandler("log/"+timeStamp+"_log.log")
+errorHandler = logging.FileHandler(os.path.join("異常ログ",timeStamp+".log"))
 fmt = logging.Formatter(
     '%(asctime)s:'
     '%(name)s:'
     '%(levelname)s:'
     '%(message)s'
 )
-h.setFormatter(fmt)
-logger.addHandler(h)
+errorHandler.setFormatter(fmt)
+errorHandler.setLevel(logging.ERROR)
+logger.addHandler(errorHandler)
 
 eachStatus = []
 
@@ -41,7 +42,7 @@ import threading
 from multiprocessing import Pool
 
 #変数設定
-modeIndex = 2
+modeIndex = 1
 modeList = [
     "dirGeneration",
     "dirRenaming",

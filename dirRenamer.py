@@ -21,7 +21,7 @@ def rename(items, lock, eachStatusIndex):
     monthlyArchiveNumber = items[6]
 
     #log設定
-    logger = logging.getLogger("renamer_" + name)
+    logger = logging.getLogger("main").getChild("renamer_" + name)
     logger.setLevel(logging.DEBUG)
 
     #ルートログフォルダ生成
@@ -33,17 +33,17 @@ def rename(items, lock, eachStatusIndex):
     localLogFolder = os.path.join(logRootDir,name)
     if not os.path.isdir(localLogFolder):
         os.mkdir(localLogFolder)
-
+    
     #ロガーフォーマット
-    h = logging.FileHandler(os.path.join(localLogFolder,dateStamp+"_log.log"))
-    fmt = logging.Formatter(
+    renameHandler = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
+    loggerFormat = logging.Formatter(
         '%(asctime)s:'
         '%(name)s:'
         '%(levelname)s:'
         '%(message)s'
     )
-    h.setFormatter(fmt)
-    logger.addHandler(h)
+    renameHandler.setFormatter(loggerFormat)
+    logger.addHandler(renameHandler)
 
     logger.warning("移動開始:"+rootPath)
 
@@ -141,6 +141,7 @@ def rename(items, lock, eachStatusIndex):
                     logger.error("移動失敗:FileExistsError")
 
     logger.warning("移動終了:"+rootPath)
+    logger.error("エラーテスト")
     
     lock.acquire()
     statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ移動完了"
