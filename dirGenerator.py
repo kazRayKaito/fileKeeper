@@ -33,6 +33,7 @@ handler.setFormatter(fmt)
 logger.addHandler(handler)
 
 def changeFileDateOnWindows(filePath, newDate):
+    #Windowsでファイル生成日時変更
     wintime = pywintypes.Time(newDate)
     winfile = win32file.CreateFile(
         filePath,
@@ -47,6 +48,7 @@ def changeFileDateOnWindows(filePath, newDate):
     winfile.close()
 
 def changeFileDateOnMac(filePath, newDate):
+    #Macでファイル生成日時変更
     tmMonth = str(newDate.timetuple().tm_mon).zfill(2)
     tmDay = str(newDate.timetuple().tm_mday).zfill(2)
     tmYear = str(newDate.timetuple().tm_year)
@@ -54,21 +56,10 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-def generate(items):
+def generate(rootDir):
     #変数定義
-    rootDir = items[3]
     runningOS = "Windows"
-    
-    if os.path.isdir(os.path.dirname(rootDir)) == False:
-        logger.error(f"Parent Directory does NOT exist at {os.path.dirname(rootDir)}")
-        return()
-
-    if os.path.isdir(rootDir) == False:
-        os.mkdir(rootDir)
-
     monthCount = 30
-    months = []
-
     files = ["fileA.txt",
             "fileB.txt",
             "fileC.txt",
@@ -76,35 +67,52 @@ def generate(items):
             "fileE.txt",
             "fileF.txt",
             "fileG.txt"]
-
+    
+    #親フォルダがない場合はエラーで終了
+    if os.path.isdir(os.path.dirname(rootDir)) == False:
+        logger.error(f"Parent Directory does NOT exist at {os.path.dirname(rootDir)}")
+        return()
+    
+    #対象フォルダがない場合は、フォルダ生成
+    if os.path.isdir(rootDir) == False:
+        os.mkdir(rootDir)
 
     for month in range(0, monthCount + 1):
-        months.append(month)
-        dirName = os.path.join(rootDir,str(month))
-        if os.path.isdir(dirName):
-            logger.info(f"{dirName} already exists")
+        #対象フォルダ内で月別フォルダを生成
+        monthlydDirName = os.path.join(rootDir,str(month))
+        if os.path.isdir(monthlydDirName):
+            logger.info(f"{monthlydDirName} already exists")
         else:
-            logger.info(f"creating {dirName}")
-            os.mkdir(dirName)
+            logger.info(f"creating {monthlydDirName}")
+            os.mkdir(monthlydDirName)
         
         for fileName in files:
-            #ファイルパス定義
-            filePath = os.path.join(dirName,fileName)
-
-            if os.path.isfile(filePath) == False:
+            #月別フォルダ内で各ファイル生成
+            filePath = os.path.join(monthlydDirName,fileName)
+            if not os.path.isfile(filePath):
                 with open(filePath, "w") as f:
                     f.write("New File Generated!")
 
-            if os.path.isfile(filePath):
-                randomDays = math.floor(random.random()*30)
-                newDate = todaysdate - td(days = (month*30 + randomDays))
+            #フォルダが生成されてない場合はエラーでスキップ
+            if not os.path.isfile(filePath):
+                logger.error("New File Generation Failed")
+                continue
 
-                if runningOS == "Mac":
-                    changeFileDateOnMac(filePath, newDate)
-                elif runningOS == "Windows":
-                    changeFileDateOnWindows(filePath, newDate)
+            #ファイルの新規日付を算出
+            randomDays = math.floor(random.random()*30)
+            newDate = todaysdate - td(days = (month*30 + randomDays))
+
+            #ファイルの日付を変更
+            if runningOS == "Mac":
+                changeFileDateOnMac(filePath, newDate)
+            elif runningOS == "Windows":
+                changeFileDateOnWindows(filePath, newDate)
 
 def startProcessing():
+    #変数定義
+    rootDirList = []
+    threads = []
+
     #dirListの場所確認
     dirListPath = os.path.join(os.getcwd(), "dirList.csv")
     if not os.path.isfile(dirListPath):
@@ -115,18 +123,20 @@ def startProcessing():
     f = open(dirListPath, 'r', encoding="utf-8")
     dirListLines = f.readlines()[1:]
 
-    multiThreadArgs = []
+    #フォルダ名取得
     for dirListLine in dirListLines:
-        items = dirListLine.split(',')
-        multiThreadArgs.append(items)
+        rootDir = dirListLine.split(',')[3]
+        rootDirList.append(rootDir)
 
-    threads = []
-    for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=generate, args=(multiThreadArgs[threadIndex], )))
+    #スレッド定義
+    for threadIndex in range(len(rootDirList)):
+        threads.append(threading.Thread(target=generate, args=(rootDirList[threadIndex], )))
     
+    #スレッド処理開始
     for thread in threads:
         thread.start()
 
+    #スレッド処理合流
     for thread in threads:
         thread.join()
 #----------------------------------動作確認用----------------------------------
