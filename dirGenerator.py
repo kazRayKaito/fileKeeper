@@ -2,9 +2,8 @@ import os
 import sys
 import random
 import math
-import time
 import logging
-import statusKeeper
+import threading
 from datetime import datetime as dt
 from datetime import timedelta as td
 from subprocess import call
@@ -13,12 +12,25 @@ import pywintypes, win32file, win32con
 #環境設定
 sys.dont_write_bytecode = True
 
-#ロガー設定
-logger = logging.getLogger("main").getChild("generator")
-
 #日付取得
 todaysdate = dt.now()
 todaysdateStamp = todaysdate.strftime("%Y-%m-%d")
+
+#ロガー設定
+import logging
+logger = logging.getLogger("main")
+logger.setLevel(logging.INFO)
+
+#ロガーフォーマット
+handler = logging.StreamHandler()
+fmt = logging.Formatter(
+    '%(asctime)s:'
+    '%(name)s:'
+    '%(levelname)s:'
+    '%(message)s'
+)
+handler.setFormatter(fmt)
+logger.addHandler(handler)
 
 def changeFileDateOnWindows(filePath, newDate):
     wintime = pywintypes.Time(newDate)
@@ -42,19 +54,13 @@ def changeFileDateOnMac(filePath, newDate):
     command = 'SetFile -d ' + dateString + ' 00:00:00 ' + filePath
     call(command, shell=True)
 
-def generate(items, lock, eachStatusIndex):
-    
-    print("generator")
-    #引数分解
-    name = items[0] + "_" + items[1] + "_" + items[2]
+def generate(items):
+    #変数定義
     rootDir = items[3]
-    folderStructure = items[4]
-    preservationDays = items[5]
-    monthlyArchiveNumber = items[6]
     runningOS = "Windows"
     
     if os.path.isdir(os.path.dirname(rootDir)) == False:
-        print("Parent Directory does NOT exist at " + os.path.dirname(rootDir))
+        logger.error(f"Parent Directory does NOT exist at {os.path.dirname(rootDir)}")
         return()
 
     if os.path.isdir(rootDir) == False:
@@ -74,10 +80,11 @@ def generate(items, lock, eachStatusIndex):
 
     for month in range(0, monthCount + 1):
         months.append(month)
-        dirName = rootDir + "/" + str(month)
+        dirName = os.path.join(rootDir,str(month))
         if os.path.isdir(dirName):
-            logger.info(dirName + " does exist")
+            logger.info(f"{dirName} already exists")
         else:
+            logger.info(f"creating {dirName}")
             os.mkdir(dirName)
         
         for fileName in files:
@@ -85,12 +92,10 @@ def generate(items, lock, eachStatusIndex):
             filePath = os.path.join(dirName,fileName)
 
             if os.path.isfile(filePath) == False:
-                logger.info("File does NOT exitst")
-                with open(dirName + "/" + fileName, "w") as f:
+                with open(filePath, "w") as f:
                     f.write("New File Generated!")
 
             if os.path.isfile(filePath):
-                logger.info("File does exist:" + dirName+"/"+fileName)
                 randomDays = math.floor(random.random()*30)
                 newDate = todaysdate - td(days = (month*30 + randomDays))
 
@@ -98,26 +103,34 @@ def generate(items, lock, eachStatusIndex):
                     changeFileDateOnMac(filePath, newDate)
                 elif runningOS == "Windows":
                     changeFileDateOnWindows(filePath, newDate)
-    
-    
-    lock.acquire()
-    statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ生成完了"
-    statusKeeper.eachStatus[eachStatusIndex][2] = 1
-    lock.release()
 
-#----------------------------------動作確認用----------------------------------
-if __name__ == "__main__":
-    print("running as main")
-
+def startProcessing():
+    #dirListの場所確認
     dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-    print(dirListPath)
+    if not os.path.isfile(dirListPath):
+        logger.error("'dirList.csv'が見つかりません。")
+        return
 
     #dirList.csvを開いて、1行ずつ読み込み
-    f = open(dirListPath, 'r')
+    f = open(dirListPath, 'r', encoding="utf-8")
     dirListLines = f.readlines()[1:]
 
+    multiThreadArgs = []
     for dirListLine in dirListLines:
-        #各行をカンマで分割し、変数代入
-        rootPath = dirListLine.split(',')[0]
-        generate(rootPath)
+        items = dirListLine.split(',')
+        multiThreadArgs.append(items)
+
+    threads = []
+    for threadIndex in range(len(multiThreadArgs)):
+        threads.append(threading.Thread(target=generate, args=(multiThreadArgs[threadIndex], )))
+    
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+#----------------------------------動作確認用----------------------------------
+if __name__ == "__main__":
+    logger.debug("running as main")
+    startProcessing()
 #----------------------------------動作確認用----------------------------------
