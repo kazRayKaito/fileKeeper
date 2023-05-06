@@ -42,27 +42,24 @@ def startProcessing():
     if not os.path.isfile(dirListPath):
         logger.error(f"'dirList.csv'が見つかりません。 at {dirListPath}")
         return
+    
+    #statusKeeper設定
+    sk = statusKeeper.statusKeeper(threading.Lock(),False)
 
     #dirList.csvを開いて、1行ずつ読み込み
     f = open(dirListPath, 'r', encoding="utf-8")
     dirListLines = f.readlines()[1:]
 
-    multiThreadArgs = []
-    names = []
-    for dirListLine in dirListLines:
+    organizers = []
+    for dirIndex, dirListLine in enumerate(dirListLines):
         items = dirListLine.split(',')
-        names.append(items[0] + "_" + items[1] + "_" + items[2])
-        multiThreadArgs.append(items)
-
-    #statusKeeper設定
-    sk = statusKeeper.statusKeeper(threading.Lock(),False)
-
-    for name in names:
+        name = items[0] + "_" + items[1] + "_" + items[2]
         sk.appendStatus([name, "開始待機中", 0])
+        organizers.append(dirOrganizer.organizer(items, dirIndex, sk))
 
     threads = []
-    for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=dirOrganizer.organize, args=(multiThreadArgs[threadIndex], threadIndex, sk)))
+    for organizer in organizers:
+        threads.append(threading.Thread(target=organizer.organize, args=()))
     
     for thread in threads:
         thread.start()
