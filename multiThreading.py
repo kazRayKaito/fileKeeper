@@ -31,8 +31,6 @@ errorHandler.setFormatter(fmt)
 errorHandler.setLevel(logging.ERROR)
 logger.addHandler(errorHandler)
 
-eachStatus = []
-
 #モジュールインポート
 import statusKeeper
 import dirOrganizer
@@ -59,48 +57,24 @@ def startProcessing():
         names.append(items[0] + "_" + items[1] + "_" + items[2])
         multiThreadArgs.append(items)
 
-    localEachStatus = []
+    #statusKeeper設定
+    sk = statusKeeper.statusKeeper(threading.Lock(),False)
 
     for name in names:
-        statusKeeper.eachStatus.append([name, "開始前待機中", 0])
-        localEachStatus.append([name, "開始前待機中", 0])
-
-    statusLock = threading.Lock()
+        sk.appendStatus([name, "開始待機中", 0])
 
     threads = []
     for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=dirOrganizer.organize, args=(multiThreadArgs[threadIndex], statusLock, threadIndex)))
+        threads.append(threading.Thread(target=dirOrganizer.organize, args=(multiThreadArgs[threadIndex], threadIndex, sk)))
     
     for thread in threads:
         thread.start()
 
     while True:
-        statusLock.acquire()
-        for threadIndex, thread in enumerate(statusKeeper.eachStatus):
-            for itemIndex, threadIteam in enumerate(thread):
-                localEachStatus[threadIndex][itemIndex] = threadIteam
-        statusLock.release()
-
-        allDone = True
-        allClear = True
-
-        #os.system('cls')
-        for localStatus in localEachStatus:
-            print(localStatus[0] + ":" + localStatus[1])
-            if localStatus[2] == 0:
-                allDone = False
-            if localStatus[2] != 1:
-                allClear = False
-        
-        if allClear:
-            print("完了：全て正常終了")
+        if sk.displayStatus():
             break
 
-        if allDone:
-            print("終了：一部異常終了")
-            break
-        
-        time.sleep(1)
+        time.sleep(0.2)
 
     for thread in threads:
         thread.join()
@@ -108,6 +82,5 @@ def startProcessing():
 #----------------------------------実行----------------------------------
 if __name__ == "__main__":
     logger.debug("running as main")
-    statusKeeper.initialize()
     startProcessing()
 #----------------------------------実行----------------------------------

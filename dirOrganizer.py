@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import timeKeeper
 import statusKeeper
 import logging
 from datetime import datetime as dt
@@ -14,7 +13,7 @@ sys.dont_write_bytecode = True
 datetimeToday = dt.now()
 dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
 
-def organize(items, lock, eachStatusIndex):
+def organize(items, eachStatusIndex, sk: statusKeeper.statusKeeper):
     #----------------変数定義----------------
     name = items[0] + "_" + items[1] + "_" + items[2] + "_" + str(eachStatusIndex)
     rootPath = items[3]
@@ -36,17 +35,17 @@ def organize(items, lock, eachStatusIndex):
         os.mkdir(localLogFolder)
     
     #ロガーフォーマット
-    renameHandler = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
+    organizerHandler = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
     loggerFormat = logging.Formatter(
         '%(asctime)s:'
         '%(name)s:'
         '%(levelname)s:'
         '%(message)s'
     )
-    renameHandler.setFormatter(loggerFormat)
-    logger.addHandler(renameHandler)
+    organizerHandler.setFormatter(loggerFormat)
+    logger.addHandler(organizerHandler)
 
-    #----------------移動処理始動----------------
+    #----------------移動処理開始----------------
     logger.warning("移動開始:"+rootPath)
 
     #変数定義
@@ -55,6 +54,7 @@ def organize(items, lock, eachStatusIndex):
     #事前確認
     if os.path.isdir(rootPath) == False:
         logger.error("移動中断_該当フォルダ無し")
+        sk.updateStatus(eachStatusIndex,"移動中断_該当フォルダ無し", -1)
         return
     
     #変数定義
@@ -67,17 +67,12 @@ def organize(items, lock, eachStatusIndex):
     #フォルダ構造が、root/サブフォルダ/ファイルとなっているパターン
     if folderStructure == "root-folder-file":
 
-        lock.acquire()
-        statusKeeper.eachStatus[eachStatusIndex][1] = "移動開始_フォルダ一覧取得中"
-        lock.release()
+        sk.updateStatus(eachStatusIndex,"移動開始_フォルダー一覧取得中")
 
         #フォルダ一覧取得（事前に時刻確認）
-        if timeKeeper.checkIfOutofTime():
+        if sk.checkIfOutofTime():
             logger.error("移動中断_アクセス許可時間外エラー")
-            lock.acquire()
-            statusKeeper.eachStatus[eachStatusIndex][1] = "移動中断_NASアクセス禁止時間帯"
-            statusKeeper.eachStatus[eachStatusIndex][2] = -1
-            lock.release()
+            sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
             return
         else:
             dirListTemp = os.listdir(rootPath)
@@ -86,13 +81,12 @@ def organize(items, lock, eachStatusIndex):
 
         for dirIndex, dir in enumerate(dirList):
             #各フォルダで名前変更処理実行
-            lock.acquire()
-            statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")"
-            lock.release()
+            sk.updateStatus(eachStatusIndex,"フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")")
 
             #現在時刻とNASアクセス許可時間帯確認
-            if timeKeeper.checkIfOutofTime():
+            if sk.checkIfOutofTime():
                 logger.error("移動中断_アクセス許可時間外エラー")
+                sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
                 return
 
             #特殊なフォルダは飛ばす
@@ -100,8 +94,9 @@ def organize(items, lock, eachStatusIndex):
                 continue
 
             #ファイル一覧取得（事前に時刻確認）
-            if timeKeeper.checkIfOutofTime():
+            if sk.checkIfOutofTime():
                 logger.error("移動中断_アクセス許可時間外エラー")
+                sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
                 return
             else:
                 dirFullPath = os.path.join(rootPath,dir)
@@ -144,7 +139,7 @@ def organize(items, lock, eachStatusIndex):
 
     logger.warning("移動終了:"+rootPath)
 
-    #----------------削除処理始動----------------
+    #----------------削除処理開始----------------
     logger.warning("削除開始:"+rootPath)
     
     #安全の為、rootPathを長期保存用フォルダパスへ変更
@@ -153,12 +148,14 @@ def organize(items, lock, eachStatusIndex):
     #事前確認
     if os.path.isdir(rootPath) == False:
         logger.error("削除中断_該当フォルダ無し")
+        sk.updateStatus(eachStatusIndex,"削除中断_該当フォルダ無し", -1)
         return
 
     #保存期間日数が適切か確認
     preservationDays = int(preservationDays)
     if ((preservationDays > 547) and (preservationDays < 7300)) == False:
         logger.error("削除中断_保存日数設定が 547日未満")
+        sk.updateStatus(eachStatusIndex,"削除中断_保存日数設定が547日未満", -1)
         return
     
     #変数定義 私の誕生日
@@ -168,15 +165,12 @@ def organize(items, lock, eachStatusIndex):
     preservationLimit = datetimeToday - td(days = int(preservationDays))
     preservationLimitFolderName = format(preservationLimit,"%Y-%m")
 
-    logger.warning("削除開始:"+rootPath)
-
-    lock.acquire()
-    statusKeeper.eachStatus[eachStatusIndex][1] = "削除開始_フォルダ一覧取得中"
-    lock.release()
+    sk.updateStatus("削除開始_フォルダ一覧取得中")
     
     #長期保存用フォルダ内のフォルダ一覧取得(事前に時刻確認)
-    if timeKeeper.checkIfOutofTime():
+    if sk.checkIfOutofTime():
         logger.error("削除中断_アクセス許可時間外エラー")
+        sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
         return
     else:
         monthlyFolderList = os.listdir(rootPath)
@@ -198,8 +192,9 @@ def organize(items, lock, eachStatusIndex):
         logger.info("削除中:"+monthlyFolderFullname)
 
         #月別フォルダ内のフォルダ一覧取得(事前に時刻確認)
-        if timeKeeper.checkIfOutofTime():
+        if sk.checkIfOutofTime():
             logger.error("削除中断_アクセス許可時間外エラー")
+            sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
             return
         else:
             dirListTemp = os.listdir(monthlyFolderFullname)
@@ -208,30 +203,28 @@ def organize(items, lock, eachStatusIndex):
         
         #月別フォルダ内のフォルダを一つずつ削除
         for dirIndex, dirName in enumerate(dirList):
-            lock.acquire()
-            statusKeeper.eachStatus[eachStatusIndex][1] = "各フォルダ削除中_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")"
-            lock.release()
+            sk.updateStatus(eachStatusIndex, "各フォルダ削除中_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")")
             
             #フォルダ削除(事前に時刻確認)
-            if timeKeeper.checkIfOutofTime():
+            if sk.checkIfOutofTime():
                 logger.error("削除中断_アクセス許可時間外エラー")
+                sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
                 return
             else:
                 shutil.rmtree(os.path.join(monthlyFolderFullname,dirName))
         
         #月別フォルダ削除(事前に時刻確認)
-        if timeKeeper.checkIfOutofTime():
+        if sk.checkIfOutofTime():
             logger.error("削除中断_アクセス許可時間外エラー")
+            sk.updateStatus(eachStatusIndex,"移動中断_NASアクセス禁止時間帯", -1)
             return
         else:
             shutil.rmtree(monthlyFolderFullname)
 
     logger.warning("削除完了:"+rootPath)
+
+    sk.updateStatus(eachStatusIndex, "フォルダ削除完了", 1)
     
-    lock.acquire()
-    statusKeeper.eachStatus[eachStatusIndex][1] = "フォルダ削除完了"
-    statusKeeper.eachStatus[eachStatusIndex][2] = 1
-    lock.release()
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":
