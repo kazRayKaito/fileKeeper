@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     #dirList.csvを開いて、1行ずつ読み込み
     dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-    f = open(dirListPath, 'r')
+    f = open(dirListPath, 'r', encoding="utf-8")
     dirListLines = f.readlines()[1:]
 
     for dirListLine in dirListLines:
