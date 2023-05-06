@@ -9,9 +9,7 @@ from datetime import timedelta as td
 #環境設定
 sys.dont_write_bytecode = True
 
-#変数定義
-datetimeToday = dt.now()
-dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
+
 
 class organizer():
     def __init__(self, name, rootPath, folderStructure, preservationDays, preservationStructure, eachStatusIndex, sk: statusKeeper.statusKeeper):
@@ -23,6 +21,9 @@ class organizer():
         self.eachStatusIndex = eachStatusIndex
         self.preservationStructure = preservationStructure
         self.sk = sk
+
+        self.datetimeToday = dt.now()
+        self.longtermPreservationDir = os.path.join(self.rootPath, "[_長期保存用フォルダ_]")
 
         #logger生成
         self.renameLogger = self.setupLogger(f"renamer_{self.name}","ログ_フォルダ移動履歴")
@@ -43,7 +44,8 @@ class organizer():
         if not os.path.isdir(localLogFolder):
             os.mkdir(localLogFolder)
         
-        #ロガーフォーマット
+        #ロガーフォーマット#変数定義
+        dateStamp = self.datetimeToday.strftime("%Y-%m-%d")
         handler = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
         loggerFormat = logging.Formatter(
             '%(asctime)s:'
@@ -67,13 +69,62 @@ class organizer():
         else:
             return os.listdir(dirPath)
         
+    def isdir(self, dirPath):
+        #フォルダ有無確認
+        if os.path.isdir(dirPath) == False:
+            self.renameLogger.error("移動中断_該当フォルダ無し")
+            self.updateStatus("移動中断_該当フォルダ無し", -1)
+
+    def getLatestDateinDir(self, dirPath):
+        #ファイル/フォルダ一覧取得
+        dirListTemp = self.listdir(dirPath, self.renameLogger)
+        if not self.checkStatusAlive(): return
+        if self.latestDateWithin14Days: return
+
+        fileList = [f for f in dirListTemp if os.path.isfile(os.path.join(dirPath,f))]
+        dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(dirPath,d))]
+
+        #最新ファイルの日付取得
+        for file in fileList:
+            createdTime = os.path.getctime(os.path.join(dirPath,file))
+            strCreatedDate = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
+            if strCreatedDate > self.latestDate:
+                self.latestDate = strCreatedDate
+                deltaDays = (self.datetimeToday - dt.fromtimestamp(createdTime)).days
+                if deltaDays < 14:
+                    self.latestDateWithin14Days = True
+                    return
+                
+        for dir in dirList:
+            self.getLatestDateinDir(os.path.join(dirPath,dir))
+    
+    def moveDir(self, moveFromDir, dir):
+        #保存先取得（長期保存）
+        latestMonth = self.latestDate[0:7]
+        monthDir = os.path.join(self.longtermPreservationDir,latestMonth)
+        dateDir = os.path.join(monthDir,self.latestDate)
+
+        #保存先フォルダの有無チェック
+        if os.path.isdir(monthDir) == False:
+            os.mkdir(monthDir)
+        
+        if self.folderStructure == "month":
+            targetDir = monthDir
+        else:
+            targetDir = dateDir
+            if os.path.isdir(targetDir) == False:
+                os.mkdir(targetDir)
+
+        #フォルダ移動
+        newDirFullPath = os.path.join(targetDir, dir)
+        try:
+            self.renameLogger.info("フォルダ移動中:" + newDirFullPath)
+            os.rename(moveFromDir, newDirFullPath)
+        except FileExistsError:
+            self.renameLogger.error("移動失敗:FileExistsError")
+
     def rename(self):
-        # root内の全ファイル取得
-        # root内の全フォルダ取得
-        # 各ファイルでiterate
-        #   日付取得
-        #   転送先確認(長期保存用フォルダの構造からめて)
-        #   ファイル転送
+        
         # 各フォルダでiterate
         #   日付取得（フォルダ内の全ファイル確認）
         #   転送先確認(長期保存用フォルダの構造からめて)
@@ -81,78 +132,40 @@ class organizer():
         self.renameLogger.warning("移動開始:"+self.rootPath)
 
         #変数定義
-        datetimeToday = dt.now()
         
-        #事前確認
-        if os.path.isdir(self.rootPath) == False:
-            self.renameLogger.error("移動中断_該当フォルダ無し")
-            self.updateStatus("移動中断_該当フォルダ無し", -1)
-        
-        #変数定義
-        self.longtermPreservationDir = os.path.join(self.rootPath, "[_長期保存用フォルダ_]")
+        #事前に rootPath の有無確認
+        self.isdir(self.rootPath)
+        if not self.checkStatusAlive(): return
 
         #長期保存用フォルダの有無チェック
         if os.path.isdir(self.longtermPreservationDir) == False:
             os.mkdir(self.longtermPreservationDir)
 
-        #フォルダ構造が、root/サブフォルダ/ファイルとなっているパターン
-        if self.folderStructure == "root-folder-file":
+        #フォルダ一覧取得
+        self.updateStatus("移動開始_フォルダー一覧取得中")
+        dirListTemp = self.listdir(self.rootPath, self.renameLogger)
+        if not self.checkStatusAlive(): return
 
-            #フォルダ一覧取得
-            self.updateStatus("移動開始_フォルダー一覧取得中")
-            dirListTemp = self.listdir(self.rootPath, self.renameLogger)
+        dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(self.rootPath,d))]
+        folderCount = len(dirList)
+
+        for dirIndex, dir in enumerate(dirList):
+            #各フォルダで名前変更処理実行
+            self.updateStatus("フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")")
+
+            #特殊なフォルダは飛ばす
+            if dir[0:2] == "[_":    
+                continue
+
+            #フォルダ内の最も新しいファイルの日付取得
+            dirFullPath = os.path.join(self.rootPath,dir)
+            self.latestDate = "0000-00-00"
+            self.latestDateWithin14Days = False
+            self.getLatestDateinDir(dirFullPath)
             if not self.checkStatusAlive(): return
+            if self.latestDateWithin14Days: continue
 
-            dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(self.rootPath,d))]
-            folderCount = len(dirList)                
-
-            for dirIndex, dir in enumerate(dirList):
-                #各フォルダで名前変更処理実行
-                self.updateStatus("フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")")
-
-                #特殊なフォルダは飛ばす
-                if dir[0:2] == "[_":    
-                    continue
-
-                #ファイル一覧取得
-                dirFullPath = os.path.join(self.rootPath,dir)
-                fileListTemp = self.listdir(dirFullPath, self.renameLogger)
-                if not self.checkStatusAlive(): return
-                fileList = [f for f in fileListTemp if os.path.isfile(os.path.join(self.rootPath,dir,f))]
-                
-                #フォルダ内にファイルしかないことを確認
-                if len(fileListTemp) != len(fileList):
-                    self.renameLogger.error("移動中断_フォルダ構造エラー:"+dirFullPath + "内でフォルダ確認")
-                    continue
-
-                #最新ファイルの日付取得
-                lastestDate = "0000-00-00"
-                latestMonth = ""
-                latestDateWithin14Days = False
-                for file in fileList:
-                    createdTime = os.path.getctime(os.path.join(self.rootPath,dir,file))
-                    strCreatedDate = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
-                    strCreatedMonth = format(dt.fromtimestamp(createdTime),"%Y-%m")
-                    if strCreatedDate > lastestDate:
-                        lastestDate = strCreatedDate
-                        latestMonth = strCreatedMonth
-                        deltaDays = (datetimeToday - dt.fromtimestamp(createdTime)).days
-                        if deltaDays < 14:
-                            latestDateWithin14Days = True
-                
-                #長期保存フォルダ内の月別フォルダの有無チェック
-                longtermPreservationMonthDir = os.path.join(self.longtermPreservationDir,latestMonth)
-                if os.path.isdir(longtermPreservationMonthDir) == False:
-                    os.mkdir(longtermPreservationMonthDir)
-
-                #フォルダ移動
-                newDirFullPath = os.path.join(longtermPreservationMonthDir, dir)
-                if latestDateWithin14Days == False:
-                    try:
-                        os.rename(dirFullPath, newDirFullPath)
-                        self.renameLogger.info("フォルダ移動中:" + newDirFullPath)
-                    except FileExistsError:
-                        self.renameLogger.error("移動失敗:FileExistsError")
+            self.moveDir(dirFullPath, dir)
 
         self.renameLogger.warning("移動終了:"+self.rootPath)
 
@@ -179,7 +192,7 @@ class organizer():
         OldestPossibleFolderName = "1996-02"
 
         #保存限界の日付から削除不可能かつ最も古いフォルダ名取得
-        preservationLimit = datetimeToday - td(days = preservationDays)
+        preservationLimit = self.datetimeToday - td(days = preservationDays)
         preservationLimitFolderName = format(preservationLimit,"%Y-%m")
         
         #長期保存用フォルダ内のフォルダ一覧取得(事前に時刻確認)
