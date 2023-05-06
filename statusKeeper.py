@@ -37,6 +37,8 @@ class statusKeeper():
             self.eachStatus[statusIndex][2] = newStatus    
         self.lock.release()
 
+    def checkStatus(self, statusIndex): return self.eachStatus[statusIndex][2]
+
     def displayStatus(self):
         os.system('cls')
         allDone = True

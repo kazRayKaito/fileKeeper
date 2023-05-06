@@ -15,12 +15,12 @@ logger = logging.getLogger("main")
 logger.setLevel(logging.DEBUG)
 
 #ログフォルダ生成
-logFolder = os.path.join(os.getcwd(),"異常ログ")
+logFolder = os.path.join(os.getcwd(),"ログ_異常履歴")
 if not os.path.isdir(logFolder):
     os.mkdir(logFolder)
 
 #ロガーフォーマット
-errorHandler = logging.FileHandler(os.path.join("異常ログ",dateStamp+".log"))
+errorHandler = logging.FileHandler(os.path.join(logFolder,dateStamp+".log"))
 fmt = logging.Formatter(
     '%(asctime)s:'
     '%(name)s:'
@@ -53,9 +53,19 @@ def startProcessing():
     organizers = []
     for dirIndex, dirListLine in enumerate(dirListLines):
         items = dirListLine.split(',')
-        name = items[0] + "_" + items[1] + "_" + items[2]
+        name = f"{items[0]}_{items[1]}_{items[2]}_{dirIndex}"
+        rootPath = items[3]
+        folderStructure = items[4]
+        preservationDays = items[5]
+        preservationStructure = items[6]
         sk.appendStatus([name, "開始待機中", 0])
-        organizers.append(dirOrganizer.organizer(items, dirIndex, sk))
+        organizers.append(dirOrganizer.organizer(name,
+                                                 rootPath,
+                                                 folderStructure,
+                                                 preservationDays,
+                                                 preservationStructure,
+                                                 dirIndex,
+                                                 sk))
 
     threads = []
     for organizer in organizers:
