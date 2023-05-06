@@ -6,8 +6,8 @@ from datetime import datetime as dt
 sys.dont_write_bytecode = True
 
 #日付取得
-timenow = dt.now()
-timeStamp = timenow.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
+datetimeToday = dt.now()
+dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
 
 #ロガー設定
 import logging
@@ -20,7 +20,7 @@ if not os.path.isdir(logFolder):
     os.mkdir(logFolder)
 
 #ロガーフォーマット
-errorHandler = logging.FileHandler(os.path.join("異常ログ",timeStamp+".log"))
+errorHandler = logging.FileHandler(os.path.join("異常ログ",dateStamp+".log"))
 fmt = logging.Formatter(
     '%(asctime)s:'
     '%(name)s:'
@@ -35,22 +35,10 @@ eachStatus = []
 
 #モジュールインポート
 import statusKeeper
-import dirRenamer
-import dirRemover
-import dirGenerator
+import dirOrganizer
 import threading
-from multiprocessing import Pool
 
-#変数設定
-modeIndex = 1
-modeList = [
-    "dirGeneration",
-    "dirRenaming",
-    "dirRemoval"
-]
-mode = modeList[modeIndex]
-
-def startProcessing(mode):
+def startProcessing():
     #マルチスレッド設定
 
     #dirListの場所確認
@@ -61,7 +49,7 @@ def startProcessing(mode):
         return
 
     #dirList.csvを開いて、1行ずつ読み込み
-    f = open(dirListPath, 'r')
+    f = open(dirListPath, 'r', encoding="utf-8")
     dirListLines = f.readlines()[1:]
 
     multiThreadArgs = []
@@ -70,12 +58,6 @@ def startProcessing(mode):
         items = dirListLine.split(',')
         names.append(items[0] + "_" + items[1] + "_" + items[2])
         multiThreadArgs.append(items)
-    if mode == "dirGeneration":
-        multiThreadRun = dirGenerator.generate
-    elif mode == "dirRenaming":
-        multiThreadRun = dirRenamer.rename
-    elif mode == "dirRemoval":
-        multiThreadRun = dirRemover.remove
 
     localEachStatus = []
 
@@ -87,7 +69,7 @@ def startProcessing(mode):
 
     threads = []
     for threadIndex in range(len(multiThreadArgs)):
-        threads.append(threading.Thread(target=multiThreadRun, args=(multiThreadArgs[threadIndex], statusLock, threadIndex)))
+        threads.append(threading.Thread(target=dirOrganizer.organize, args=(multiThreadArgs[threadIndex], statusLock, threadIndex)))
     
     for thread in threads:
         thread.start()
@@ -125,7 +107,7 @@ def startProcessing(mode):
 
 #----------------------------------実行----------------------------------
 if __name__ == "__main__":
-    logger.debug("running as main. mode:"+mode)
+    logger.debug("running as main")
     statusKeeper.initialize()
-    startProcessing(mode)
+    startProcessing()
 #----------------------------------実行----------------------------------
