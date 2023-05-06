@@ -19,9 +19,9 @@ class statusKeeper():
     ]
     def __init__(self, lock: threading.Lock, watchTime = True):
         #変数定義
-        self.eachStatus = []
-        self.watchTime = watchTime
-        self.lock = lock
+        self.eachStatus = [] #(name, message, status(0:処理中,1:正常終了,-1:異常終了))
+        self.watchTime = watchTime #真ならNASアクセス許可時間帯を確認
+        self.lock = lock #マルチスレッド用
 
         #ロガー設定
         self.logger = logging.getLogger("main").getChild("statusKeeper")
@@ -59,26 +59,18 @@ class statusKeeper():
         return False
     
     def checkIfOutofTime(self):
-        #現在時刻取得
         if not self.watchTime:
             return False
 
+        #現在時刻と曜日取得 [0:月曜日～6:日曜日]
         currentTime = dt.now()
-
-        #デバッグ用
-        #if offsetHour != 0:
-        #    currentTime = currentTime + td(hours = offsetHour)
-
-        #曜日取得 [0:月曜日～6:日曜日]
         weekday = currentTime.weekday()
 
         #曜日別のNASアクセス許可時間取得
         allowedStartTime = self.allowedTimeHourList[weekday][0]
         allowedEndTime = self.allowedTimeHourList[weekday][1]
 
-        notAllowed = not ((currentTime.hour >= allowedStartTime) and (currentTime.hour < allowedEndTime))
-
-        return notAllowed
+        return not ((currentTime.hour >= allowedStartTime) and (currentTime.hour < allowedEndTime))
     
  #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":

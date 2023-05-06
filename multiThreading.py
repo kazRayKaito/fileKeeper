@@ -37,13 +37,10 @@ import dirOrganizer
 import threading
 
 def startProcessing():
-    #マルチスレッド設定
-
     #dirListの場所確認
     dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-    logger.debug(dirListPath)
     if not os.path.isfile(dirListPath):
-        logger.error("'dirList.csv'が見つかりません。")
+        logger.error(f"'dirList.csv'が見つかりません。 at {dirListPath}")
         return
 
     #dirList.csvを開いて、1行ずつ読み込み

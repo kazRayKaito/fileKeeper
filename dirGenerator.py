@@ -32,6 +32,10 @@ fmt = logging.Formatter(
 handler.setFormatter(fmt)
 logger.addHandler(handler)
 
+#変数設定
+runningOS = "Windows"
+lotOfDirs = False
+
 def changeFileDateOnWindows(filePath, newDate):
     #Windowsでファイル生成日時変更
     wintime = pywintypes.Time(newDate)
@@ -58,8 +62,7 @@ def changeFileDateOnMac(filePath, newDate):
 
 def generate(rootDir):
     #変数定義
-    runningOS = "Windows"
-    monthCount = 30
+    monthCount = 180 if lotOfDirs else 30
     files = ["fileA.txt",
             "fileB.txt",
             "fileC.txt",
@@ -99,8 +102,9 @@ def generate(rootDir):
                 continue
 
             #ファイルの新規日付を算出
-            randomDays = math.floor(random.random()*30)
-            newDate = todaysdate - td(days = (month*30 + randomDays))
+            offset = 6 if lotOfDirs else 30
+            randomDays = math.floor(random.random()*offset)
+            newDate = todaysdate - td(days = (month*offset + randomDays))
 
             #ファイルの日付を変更
             if runningOS == "Mac":
