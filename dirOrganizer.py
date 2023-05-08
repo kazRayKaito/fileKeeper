@@ -99,6 +99,11 @@ class organizer():
             self.getLatestDateinDir(os.path.join(dirPath,dir))
     
     def moveDir(self, moveFromDir, dir):
+        #NASへのアクセス許可時間帯確認
+        if self.sk.checkIfOutofTime():
+            self.renameLogger.error("移動中断_アクセス許可時間外エラー")
+            self.updateStatus("移動中断_NASアクセス禁止時間帯", -1)
+
         #保存先取得（長期保存）
         latestMonth = self.latestDate[0:7]
         monthDir = os.path.join(self.longtermPreservationDir,latestMonth)
@@ -108,6 +113,7 @@ class organizer():
         if os.path.isdir(monthDir) == False:
             os.mkdir(monthDir)
         
+        #保存フォルダ構造に基づき保存先取得
         if self.folderStructure == "month":
             targetDir = monthDir
         else:
@@ -115,7 +121,7 @@ class organizer():
             if os.path.isdir(targetDir) == False:
                 os.mkdir(targetDir)
 
-        #フォルダ移動
+        #フォルダ移動実施
         newDirFullPath = os.path.join(targetDir, dir)
         try:
             self.renameLogger.info("フォルダ移動中:" + newDirFullPath)
@@ -147,6 +153,7 @@ class organizer():
         if not self.checkStatusAlive(): return
 
         dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(self.rootPath,d))]
+        fileList = [f for f in dirListTemp if os.path.isfile(os.path.join(self.rootPath,f))]
         folderCount = len(dirList)
 
         for dirIndex, dir in enumerate(dirList):
@@ -159,13 +166,26 @@ class organizer():
 
             #フォルダ内の最も新しいファイルの日付取得
             dirFullPath = os.path.join(self.rootPath,dir)
-            self.latestDate = "0000-00-00"
+            self.latestDate = "2000-00-00"
             self.latestDateWithin14Days = False
             self.getLatestDateinDir(dirFullPath)
             if not self.checkStatusAlive(): return
             if self.latestDateWithin14Days: continue
 
             self.moveDir(dirFullPath, dir)
+        
+        for file in fileList:
+            #各ファイルの作成日時確認
+            createdTime = os.path.getctime(os.path.join(self.rootPath,file))
+            strCreatedDate = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
+            self.latestDate = strCreatedDate
+            deltaDays = (self.datetimeToday - dt.fromtimestamp(createdTime)).days
+            if deltaDays < 14:
+                continue
+
+            #フォルダ移動
+            self.moveDir(os.path.join(self.rootPath, file), file)
+
 
         self.renameLogger.warning("移動終了:"+self.rootPath)
 
