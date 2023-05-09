@@ -55,15 +55,13 @@ def startProcessing():
         items = dirListLine.split(',')
         name = f"{items[0]}_{items[1]}_{items[2]}_{dirIndex}"
         rootPath = items[3]
-        folderStructure = items[4]
+        preservationStructure = items[4]
         preservationDays = items[5]
-        preservationStructure = items[6]
         sk.appendStatus([name, "開始待機中", 0])
         organizers.append(dirOrganizer.organizer(name,
                                                  rootPath,
-                                                 folderStructure,
-                                                 preservationDays,
                                                  preservationStructure,
+                                                 preservationDays,
                                                  dirIndex,
                                                  sk))
 

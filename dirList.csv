@@ -1,7 +1,7 @@
-大分類,中分類,小分類,フォルダパス,フォルダ構造,保存日数(558=31日*18カ月),長期保存用フォルダ構造
-DivA,SubA,Det1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir1,root-folder-file,558,month
-DivA,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir2,root-folder-file,558,month
-DivB,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir3,root-folder-file,558,month-date
-DivB,SubA,Div2,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir4,root-folder-file,558,month-date
-DivC,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir5,root-folder-file,558,month
-DivC,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir6,root-folder-file,558,month
+大分類,中分類,小分類,フォルダパス,長期保存用フォルダ構造("date"で日別),保存日数(558=31日*18カ月),
+DivA,SubA,Det1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir1,date,558
+DivA,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir2,data,558
+DivB,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir3,date,558
+DivB,SubA,Div2,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir4,month,558
+DivC,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir5, ,558
+DivC,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir6,,558

@@ -9,17 +9,14 @@ from datetime import timedelta as td
 #環境設定
 sys.dont_write_bytecode = True
 
-
-
 class organizer():
-    def __init__(self, name, rootPath, folderStructure, preservationDays, preservationStructure, eachStatusIndex, sk: statusKeeper.statusKeeper):
+    def __init__(self, name, rootPath, preservationStructure, preservationDays, eachStatusIndex, sk: statusKeeper.statusKeeper):
         #----------------変数定義----------------
         self.name = name
         self.rootPath = rootPath
-        self.folderStructure = folderStructure
+        self.preservationStructure = preservationStructure
         self.preservationDays = preservationDays
         self.eachStatusIndex = eachStatusIndex
-        self.preservationStructure = preservationStructure
         self.sk = sk
 
         self.datetimeToday = dt.now()
@@ -58,22 +55,28 @@ class organizer():
 
         return logger
     
-    def updateStatus(self, msg = None, ns = None): self.sk.updateStatus(self.eachStatusIndex, msg, ns)
-    def checkStatusAlive(self): return self.sk.checkStatus(self.eachStatusIndex) == 0
+    def updateStatus(self, msg = None, ns = None):
+        self.sk.updateStatus(self.eachStatusIndex, msg, ns)
+
+    def checkStatusAlive(self):
+        return self.sk.checkStatus(self.eachStatusIndex) == 0
+    
+    def checkIfOutofTime(self, logger: logging.Logger):
+        if self.sk.checkIfOutofTime():
+            logger.error("処理中断_アクセス許可時間外エラー")
+            self.updateStatus("処理中断_NASアクセス禁止時間帯", -1)
+        
+    def isdir(self, dirPath, logger: logging.Logger):
+        #フォルダ有無確認
+        if not os.path.isdir(dirPath):
+            logger.error("処理中断_該当フォルダ無し")
+            self.updateStatus("処理中断_該当フォルダ無し", -1)
 
     def listdir(self, dirPath, logger: logging.Logger):
         #フォルダ一覧取得（事前に時刻確認）
-        if self.sk.checkIfOutofTime():
-            logger.error("移動中断_アクセス許可時間外エラー")
-            self.updateStatus("移動中断_NASアクセス禁止時間帯", -1)
-        else:
-            return os.listdir(dirPath)
-        
-    def isdir(self, dirPath):
-        #フォルダ有無確認
-        if os.path.isdir(dirPath) == False:
-            self.renameLogger.error("移動中断_該当フォルダ無し")
-            self.updateStatus("移動中断_該当フォルダ無し", -1)
+        if self.checkIfOutofTime(logger):
+            return
+        return os.listdir(dirPath)
 
     def getLatestDateinDir(self, dirPath):
         #ファイル/フォルダ一覧取得
@@ -98,11 +101,9 @@ class organizer():
         for dir in dirList:
             self.getLatestDateinDir(os.path.join(dirPath,dir))
     
-    def moveDir(self, moveFromDir, dir):
+    def renameDir(self, moveFromDir, dir):
         #NASへのアクセス許可時間帯確認
-        if self.sk.checkIfOutofTime():
-            self.renameLogger.error("移動中断_アクセス許可時間外エラー")
-            self.updateStatus("移動中断_NASアクセス禁止時間帯", -1)
+        if self.checkIfOutofTime(self.renameLogger): return
 
         #保存先取得（長期保存）
         latestMonth = self.latestDate[0:7]
@@ -114,7 +115,7 @@ class organizer():
             os.mkdir(monthDir)
         
         #保存フォルダ構造に基づき保存先取得
-        if self.folderStructure == "month":
+        if not self.preservationStructure == "date":
             targetDir = monthDir
         else:
             targetDir = dateDir
@@ -124,23 +125,20 @@ class organizer():
         #フォルダ移動実施
         newDirFullPath = os.path.join(targetDir, dir)
         try:
-            self.renameLogger.info("フォルダ移動中:" + newDirFullPath)
+            self.renameLogger.info("-移動中-:" + newDirFullPath)
             os.rename(moveFromDir, newDirFullPath)
         except FileExistsError:
             self.renameLogger.error("移動失敗:FileExistsError")
 
-    def rename(self):
-        
-        # 各フォルダでiterate
-        #   日付取得（フォルダ内の全ファイル確認）
-        #   転送先確認(長期保存用フォルダの構造からめて)
-        #   フォルダごと転送;
-        self.renameLogger.warning("移動開始:"+self.rootPath)
+    def removeDir(self, dir):
+        #NASへのアクセス許可時間帯確認
+        if self.checkIfOutofTime(self.removeLogger): return
+        self.removeLogger.info("-削除中-:"+dir)
+        shutil.rmtree(dir)
 
-        #変数定義
-        
+    def rename(self):        
         #事前に rootPath の有無確認
-        self.isdir(self.rootPath)
+        self.isdir(self.rootPath, self.renameLogger)
         if not self.checkStatusAlive(): return
 
         #長期保存用フォルダの有無チェック
@@ -172,7 +170,7 @@ class organizer():
             if not self.checkStatusAlive(): return
             if self.latestDateWithin14Days: continue
 
-            self.moveDir(dirFullPath, dir)
+            self.renameDir(dirFullPath, dir)
         
         for file in fileList:
             #各ファイルの作成日時確認
@@ -184,32 +182,18 @@ class organizer():
                 continue
 
             #フォルダ移動
-            self.moveDir(os.path.join(self.rootPath, file), file)
-
-
-        self.renameLogger.warning("移動終了:"+self.rootPath)
+            self.renameDir(os.path.join(self.rootPath, file), file)
 
     def remove(self):
-        self.removeLogger.warning("削除開始:"+self.rootPath)
-        
-        #安全の為、rootPathを長期保存用フォルダパスへ変更
-        rootPath = os.path.join(self.rootPath, "[_長期保存用フォルダ_]")
-        
-        #事前確認
-        if os.path.isdir(rootPath) == False:
-            self.removeLogger.error("削除中断_該当フォルダ無し")
-            self.updateStatus("削除中断_該当フォルダ無し", -1)
-            return
+        #フォルダ有無確認
+        self.isdir(self.longtermPreservationDir, self.removeLogger)
 
         #保存期間日数が適切か確認
         preservationDays = int(self.preservationDays)
-        if ((preservationDays > 547) and (preservationDays < 7300)) == False:
+        if not ((preservationDays > 547) and (preservationDays < 7300)):
             self.removeLogger.error("削除中断_保存日数設定が 547日未満")
             self.updateStatus("削除中断_保存日数設定が547日未満", -1)
             return
-        
-        #変数定義 私の誕生日
-        OldestPossibleFolderName = "1996-02"
 
         #保存限界の日付から削除不可能かつ最も古いフォルダ名取得
         preservationLimit = self.datetimeToday - td(days = preservationDays)
@@ -217,76 +201,56 @@ class organizer():
         
         #長期保存用フォルダ内のフォルダ一覧取得(事前に時刻確認)
         self.updateStatus("削除開始_フォルダ一覧取得中")
-        monthlyFolderList = self.listdir(rootPath, self.removeLogger)
+        monthlyFolderListTemp = self.listdir(self.longtermPreservationDir, self.removeLogger)
+        monthlyFolderList = [d for d in monthlyFolderListTemp if os.path.isdir(os.path.join(self.longtermPreservationDir,d))]
         if not self.checkStatusAlive(): return
 
         monthlyDirCount = len(monthlyFolderList)
         
         for monthlyDirIndex, monthlyFolder in enumerate(monthlyFolderList):
             #保存限界より古いか確認
-            if monthlyFolder >= preservationLimitFolderName:
-                #保存限界より新しいか保存限界のフォルダはパス
-                continue
-            if monthlyFolder <= OldestPossibleFolderName:
-                #私の誕生日より古いフォルダは意図しないフォルダの削除に繋がるのでパス
-                continue
+            if monthlyFolder >= preservationLimitFolderName: continue
             
             #月別フォルダのパス取得
-            monthlyFolderFullname = os.path.join(rootPath,monthlyFolder)
-
-            #月別フォルダの削除開始
-            self.removeLogger.info("削除中:"+monthlyFolderFullname)
-
+            monthlyFolderFullname = os.path.join(self.longtermPreservationDir,monthlyFolder)
 
             #月別フォルダ内のフォルダ一覧取得(事前に時刻確認)
-            dirListTemp = self.listdir(monthlyFolderFullname, self.removeLogger)
+            folderListTemp = self.listdir(monthlyFolderFullname, self.removeLogger)
             if not self.checkStatusAlive(): return
 
-            dirList = [d for d in dirListTemp if os.path.isdir(os.path.join(rootPath,d))]
-            dirCount = len(dirList)
+            folderList = [d for d in folderListTemp if os.path.isdir(os.path.join(monthlyFolderFullname,d))]
+            dirCount = len(folderList)
             
             #月別フォルダ内のフォルダを一つずつ削除
-            for dirIndex, dirName in enumerate(dirList):
+            for dirIndex, dirName in enumerate(folderList):
                 self.updateStatus("各フォルダ削除中_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")")
-                
-                #フォルダ削除(事前に時刻確認)
-                if self.sk.checkIfOutofTime():
-                    self.removeLogger.error("削除中断_アクセス許可時間外エラー")
-                    self.updateStatus("移動中断_NASアクセス禁止時間帯", -1)
-                    return
-                else:
-                    shutil.rmtree(os.path.join(monthlyFolderFullname,dirName))
+                self.removeDir(os.path.join(monthlyFolderFullname, dirName))
             
-            #月別フォルダ削除(事前に時刻確認)
-            if self.sk.checkIfOutofTime():
-                self.removeLogger.error("削除中断_アクセス許可時間外エラー")
-                self.updateStatus("移動中断_NASアクセス禁止時間帯", -1)
-                return
-            else:
-                shutil.rmtree(monthlyFolderFullname)
+            #月別フォルダ削除
+            self.removeDir(monthlyFolderFullname)
 
-        self.removeLogger.warning("削除完了:"+rootPath)
 
     def organize(self):
+        # フォルダの移動開始
+        self.renameLogger.info("移動開始:"+self.rootPath)
         self.rename()
-        if not self.checkStatusAlive(): return
 
-        self.remove()
+        # 実行ステータス確認
         if not self.checkStatusAlive(): return
-        
+        self.renameLogger.info("移動完了:"+self.rootPath)
+
+        # フォルダの削除開始
+        self.removeLogger.info("削除開始:"+self.rootPath)
+        self.remove()
+
+        # 実行ステータス確認
+        if not self.checkStatusAlive(): return
+        self.removeLogger.info("削除完了:"+self.longtermPreservationDir)
+
+        # ステータスを「処理完了」状態へ変更
         self.updateStatus("処理完了", 1)
 
 #----------------------------------動作確認用----------------------------------
 if __name__ == "__main__":
     print("running as main")
-
-    #dirList.csvを開いて、1行ずつ読み込み
-    dirListPath = os.path.join(os.getcwd(), "dirList.csv")
-    f = open(dirListPath, 'r', encoding="utf-8")
-    dirListLines = f.readlines()[1:]
-
-    for dirListLine in dirListLines:
-
-        #各行をカンマで分割し、変数代入
-        items = dirListLine.split(',')
 #----------------------------------動作確認用----------------------------------
