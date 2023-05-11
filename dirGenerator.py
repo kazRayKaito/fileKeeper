@@ -2,6 +2,7 @@ import os
 import sys
 import random
 import math
+import shutil
 import logging
 import threading
 from datetime import datetime as dt
@@ -34,7 +35,7 @@ logger.addHandler(handler)
 
 #変数設定
 runningOS = "Windows"
-lotOfDirs = False
+lotOfDirs = True
 
 def changeFileDateOnWindows(filePath, newDate):
     #Windowsでファイル生成日時変更
@@ -76,9 +77,11 @@ def generate(rootDir):
         logger.error(f"Parent Directory does NOT exist at {os.path.dirname(rootDir)}")
         return()
     
-    #対象フォルダがない場合は、フォルダ生成
-    if os.path.isdir(rootDir) == False:
-        os.mkdir(rootDir)
+    #対象フォルダがない場合は、フォルダ生成前に削除
+    if os.path.isdir(rootDir):
+        shutil.rmtree(rootDir)
+    
+    os.mkdir(rootDir)
 
     for month in range(0, monthCount + 1):
         #対象フォルダ内で月別フォルダを生成
@@ -103,8 +106,9 @@ def generate(rootDir):
 
             #ファイルの新規日付を算出
             offset = 6 if lotOfDirs else 30
-            randomDays = math.floor(random.random()*offset)
-            newDate = todaysdate - td(days = (month*offset + randomDays))
+            randomDays = math.floor(random.random()*offset) * 0
+            randomTime = random.random()
+            newDate = todaysdate - td(days = (month*offset + randomDays + randomTime))
 
             #ファイルの日付を変更
             if runningOS == "Mac":
