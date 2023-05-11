@@ -24,9 +24,9 @@ class organizer():
         self.permanentPreservationDir = os.path.join(self.rootPath, "[_恒久保存用フォルダ_]")
 
         #logger生成
-        self.renameLogger = self.setupLogger(f"renamer_{self.name}","ログ_フォルダ移動履歴")
-        self.saveLogger = self.setupLogger(f"saver_{self.name}","ログ_ファイル保存履歴")
-        self.removeLogger = self.setupLogger(f"remover_{self.name}","ログ_フォルダ削除履歴")
+        self.renameLogger = self.setupLogger(f"renamer_{self.name}","01_ログ_フォルダ移動履歴")
+        self.saveLogger = self.setupLogger(f"saver_{self.name}","02_ログ_ファイル保存履歴")
+        self.removeLogger = self.setupLogger(f"remover_{self.name}","03_ログ_フォルダ削除履歴")
     
     def setupLogger(self, logName, folderName):
         #----------------log設定----------------
@@ -139,7 +139,7 @@ class organizer():
         #フォルダ移動実施
         newDirFullPath = os.path.join(targetDir, dir)
         try:
-            self.renameLogger.info("-移動中-:" + newDirFullPath)
+            self.renameLogger.info("-移動中-:" + dir)
             os.rename(moveFromDir, newDirFullPath)
         except BaseException as be:
             self.renameLogger.error(f"移動失敗:{be}")
@@ -281,7 +281,7 @@ class organizer():
             #恒久保存フォルダ生成
             destinDir = os.path.join(self.permanentPreservationDir, targetDir)
             os.mkdir(destinDir)
-            self.saveLogger.info(f"保存対象月：{targetDir}")
+            self.saveLogger.info(f"-保存中-:{targetDir}")
 
             #全対象ファイル保存
             for targetFile in self.saveFileList:
@@ -296,7 +296,7 @@ class organizer():
                 except BaseException as be:
                     self.saveLogger.error(f"保存失敗:{be}")
 
-    def removeDir(self, dir):
+    def removeDir(self, dirFullPath, dir):
         #NASへのアクセス許可時間帯確認
         if self.checkIfOutofTime(self.removeLogger):
             return
@@ -304,7 +304,7 @@ class organizer():
         #フォルダごと削除
         try:
             self.removeLogger.info("-削除中-:"+dir)
-            shutil.rmtree(dir)
+            shutil.rmtree(dirFullPath)
         except BaseException as be:
             self.removeLogger.error(f"削除失敗:{be}")
 
@@ -332,7 +332,7 @@ class organizer():
                 noMoreFiles = False
 
         for dir in dirList:
-            self.removeLogger.info(f"{dir}")
+            self.removeLogger.info(f"-削除中-:{dir}")
             if not self.checkEachFileAndDelete(os.path.join(dirPath,dir)):
                 noMoreFiles = False
         
@@ -388,38 +388,36 @@ class organizer():
                 #月別フォルダ内のフォルダを一つずつ削除
                 for dirIndex, dirName in enumerate(folderList):
                     self.updateStatus("各フォルダ削除中_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")")
-                    self.removeDir(os.path.join(monthlyFolderFullname, dirName))
+                    self.removeDir(os.path.join(monthlyFolderFullname, dirName), dirName)
                 
                 #月別フォルダ削除
-                self.removeDir(monthlyFolderFullname)
+                self.removeDir(monthlyFolderFullname, monthlyFolder)
             elif monthlyFolder == preservationLimitFolderName:
                 self.updateStatus("各ファイル削除中")
-                self.checkEachFileAndDelete(os.path.join(self.longtermPreservationDir,monthlyFolder))
+                self.removeLogger.info(f"各ファイル削除中:{monthlyFolder}")
+                self.checkEachFileAndDelete(os.path.join(self.longtermPreservationDir, monthlyFolder))
 
     def organize(self):
         # フォルダの移動開始
-        self.renameLogger.info("移動開始:"+self.rootPath)
+        self.renameLogger.info("----------------移動開始----------------:")
+        self.renameLogger.info("対象フォルダ:"+self.rootPath)
         self.rename()
-
-        # 実行ステータス確認
         if not self.checkStatusAlive(): return
-        self.renameLogger.info("移動完了:"+self.rootPath)
+        self.renameLogger.info("----------------移動完了----------------:")
 
         # 一部ファイルの恒久保存開始
-        self.saveLogger.info("保存開始:"+self.permanentPreservationDir)
+        self.saveLogger.info(  "----------------保存開始----------------:")
+        self.saveLogger.info(  "対象フォルダ:"+self.rootPath)
         self.save()
-
-        # 実行ステータス確認
         if not self.checkStatusAlive(): return
-        self.saveLogger.info("保存完了:"+self.permanentPreservationDir)
+        self.saveLogger.info(  "----------------保存完了----------------:")
 
         # フォルダの削除開始
-        self.removeLogger.info("削除開始:"+self.rootPath)
+        self.removeLogger.info("----------------削除開始----------------:")
+        self.removeLogger.info("対象フォルダ:"+self.rootPath)
         self.remove()
-
-        # 実行ステータス確認
         if not self.checkStatusAlive(): return
-        self.removeLogger.info("削除完了:"+self.longtermPreservationDir)
+        self.removeLogger.info("----------------削除完了----------------:")
 
         # ステータスを「処理完了」状態へ変更
         self.updateStatus("処理完了", 1)

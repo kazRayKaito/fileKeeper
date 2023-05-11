@@ -15,7 +15,7 @@ logger = logging.getLogger("main")
 logger.setLevel(logging.DEBUG)
 
 #ログフォルダ生成
-logFolder = os.path.join(os.getcwd(),"ログ_異常履歴")
+logFolder = os.path.join(os.getcwd(),"10_ログ_異常履歴")
 if not os.path.isdir(logFolder):
     os.mkdir(logFolder)
 
