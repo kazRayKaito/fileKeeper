@@ -141,10 +141,10 @@ class organizer():
 
         #フォルダ移動実施
         newDirFullPath = os.path.join(targetDir, dir)
-
-        #TEST
-        time.sleep(math.floor(random.random()*10)/100)
+    
         try:
+            #TEST
+            #time.sleep(math.floor(random.random()*10)/100)
             self.renameLogger.info("-移動中-:" + dir)
             os.rename(moveFromDir, newDirFullPath)
         except BaseException as be:
@@ -160,7 +160,7 @@ class organizer():
             os.mkdir(self.longtermPreservationDir)
 
         #フォルダ一覧取得
-        self.updateStatus("移動開始_フォルダー一覧取得中")
+        self.updateStatus("[STEP1/3_長期保存]_フォルダー一覧取得中")
         dirListTemp = self.listdir(self.rootPath, self.renameLogger)
         if not self.checkStatusAlive(): return
         
@@ -170,7 +170,7 @@ class organizer():
 
         for dirIndex, dir in enumerate(dirList):
             #各フォルダで名前変更処理実行
-            self.updateStatus("フォルダ一覧取得完了_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")")
+            self.updateStatus("[STEP1/3_長期保存]_フォルダ一覧取得完_各フォルダ移動中("+str(dirIndex)+"/"+str(folderCount)+")")
 
             #特殊なフォルダは飛ばす
             if dir[0:2] == "[_":    
@@ -200,7 +200,7 @@ class organizer():
 
     def getSaveDirList(self):
         #長期保存と恒久保存フォルダ一覧取得
-        self.updateStatus("保存開始_フォルダー一覧取得中")
+        self.updateStatus("[STEP2/3_恒久保存]_フォルダー一覧取得中")
         sourceDirListTemp = self.listdir(self.longtermPreservationDir, self.saveLogger)
         destinDirListTemp = self.listdir(self.permanentPreservationDir, self.saveLogger)
         sourceDirList = [d for d in sourceDirListTemp if os.path.isdir(os.path.join(self.longtermPreservationDir,d))]
@@ -273,7 +273,7 @@ class organizer():
         targetDirCount = len(targetDirList)
 
         for targetDirIndex, targetDir in enumerate(targetDirList):
-            self.updateStatus(f"-保存中-:({targetDirIndex}/{targetDirCount})")
+            self.updateStatus(f"[STEP2/3_恒久保存]_フォルダー一覧取得完_保存中:({targetDirIndex}/{targetDirCount})")
 
             #各フォルダで名前変更処理実行
             self.saveFileList = []
@@ -298,6 +298,8 @@ class organizer():
                 #画像複製保存
                 destinPath = os.path.join(destinDir, f"{targetFile[3]}_{targetFile[1]}")
                 try:
+                    #TEST
+                    #time.sleep(math.floor(random.random()*10)/100)
                     shutil.copyfile(targetFile[0], destinPath)
                 except BaseException as be:
                     self.saveLogger.error(f"保存失敗:{be}")
@@ -309,6 +311,8 @@ class organizer():
         
         #フォルダごと削除
         try:
+            #TEST
+            #time.sleep(math.floor(random.random()*10)/100)
             self.removeLogger.info("-削除中-:"+dir)
             shutil.rmtree(dirFullPath)
         except BaseException as be:
@@ -331,6 +335,8 @@ class organizer():
             deltaDays = (self.datetimeToday - dt.fromtimestamp(createdTime)).days
             if deltaDays > int(self.preservationDays):
                 try:
+                    #TEST
+                    #time.sleep(math.floor(random.random()*10)/100)
                     os.remove(filePath)
                 except BaseException as be:
                     self.removeLogger.error(f"削除失敗:{be}")
@@ -344,6 +350,8 @@ class organizer():
         
         if noMoreFiles:
             try:
+                #TEST
+                #time.sleep(math.floor(random.random()*10)/100)
                 os.rmdir(dirPath)
             except BaseException as be:
                 self.removeLogger.error(f"削除失敗:{be}")
@@ -367,7 +375,7 @@ class organizer():
         preservationLimitFolderName = format(preservationLimit,"%Y-%m")
         
         #長期保存用フォルダ内のフォルダ一覧取得(事前に時刻確認)
-        self.updateStatus("削除開始_フォルダ一覧取得中")
+        self.updateStatus("[STEP3/3___削除__]_フォルダ一覧取得中")
         monthlyFolderListTemp = self.listdir(self.longtermPreservationDir, self.removeLogger)
         monthlyFolderList = [d for d in monthlyFolderListTemp if os.path.isdir(os.path.join(self.longtermPreservationDir,d))]
         if not self.checkStatusAlive(): return
@@ -393,13 +401,13 @@ class organizer():
                 
                 #月別フォルダ内のフォルダを一つずつ削除
                 for dirIndex, dirName in enumerate(folderList):
-                    self.updateStatus("各フォルダ削除中_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")")
+                    self.updateStatus("[STEP3/3___削除__]_フォルダ一覧取得完_月別フォルダ("+str(monthlyDirIndex)+"/"+str(monthlyDirCount)+")-月内フォルダ("+str(dirIndex)+"/"+str(dirCount)+")")
                     self.removeDir(os.path.join(monthlyFolderFullname, dirName), dirName)
                 
                 #月別フォルダ削除
                 self.removeDir(monthlyFolderFullname, monthlyFolder)
             elif monthlyFolder == preservationLimitFolderName:
-                self.updateStatus("各ファイル削除中")
+                self.updateStatus("[STEP3/3___削除__]_フォルダ一覧取得完_月別フォルダ内の各ファイル削除中")
                 self.removeLogger.info(f"各ファイル削除中:{monthlyFolder}")
                 self.checkEachFileAndDelete(os.path.join(self.longtermPreservationDir, monthlyFolder))
 
