@@ -42,7 +42,8 @@ if __name__ == "__main__":
     kazuki = human("Kazuki", ourbot)
     lily = human("Lily", ourbot)
 
-    print("")
+    print("│   ├──")
+    print("│   └──")
     print("ourbot print data")
     ourbot.printData()
 

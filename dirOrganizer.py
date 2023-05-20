@@ -3,6 +3,9 @@ import sys
 import shutil
 import statusKeeper
 import logging
+import time
+import random
+import math
 from datetime import datetime as dt
 from datetime import timedelta as td
 
@@ -138,12 +141,15 @@ class organizer():
 
         #フォルダ移動実施
         newDirFullPath = os.path.join(targetDir, dir)
+
+        #TEST
+        time.sleep(math.floor(random.random()*10)/100)
         try:
             self.renameLogger.info("-移動中-:" + dir)
             os.rename(moveFromDir, newDirFullPath)
         except BaseException as be:
             self.renameLogger.error(f"移動失敗:{be}")
-
+        
     def rename(self):        
         #事前に rootPath の有無確認
         self.isdir(self.rootPath, self.renameLogger)

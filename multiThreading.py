@@ -57,7 +57,7 @@ def startProcessing():
         rootPath = items[3]
         preservationStructure = items[4]
         preservationDays = items[5]
-        sk.appendStatus([name, "開始待機中", 0])
+        sk.appendStatus([items[0:3], "開始待機中", 0])
         organizers.append(dirOrganizer.organizer(name,
                                                  rootPath,
                                                  preservationStructure,

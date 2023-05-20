@@ -27,6 +27,7 @@ class statusKeeper():
         self.logger = logging.getLogger("main").getChild("statusKeeper")
 
     def appendStatus(self, newStatus):
+        newStatus.append("")
         self.eachStatus.append(newStatus)
 
     def updateStatus(self, statusIndex, message = None, newStatus = None):
@@ -43,12 +44,40 @@ class statusKeeper():
         os.system('cls')
         allDone = True
         allClear = True
+        printLinesData = []
+        printLines = []
         for eachStatus in self.eachStatus:
-            print(f"{eachStatus[0]}:{eachStatus[1]}")
+            printIt = True
             if eachStatus[2] == 0:
                 allDone = False
+            else:
+                printIt = False
             if eachStatus[2] != 1:
                 allClear = False
+            else:
+                printIt = False
+            if printIt:
+                printLinesData.append([eachStatus[0],eachStatus[1]])
+
+        for lineIndex, printLineData in enumerate(printLinesData):
+            if lineIndex == 0 or printLineData[0][0] != printLinesData[lineIndex - 1][0][0]:
+                printLines.append(f"{printLineData[0][0]}")
+            if lineIndex == 0 or printLineData[0][1] != printLinesData[lineIndex - 1][0][1]:
+                if lineIndex == len(printLinesData)-1:
+                    printLines.append(f"├──{printLineData[0][1]}")
+                elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
+                    printLines.append(f"├──{printLineData[0][1]}")
+                else:
+                    printLines.append(f"├──{printLineData[0][1]}")
+            if lineIndex == len(printLinesData)-1:
+                printLines.append("│  └──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
+            elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
+                printLines.append("│  └──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
+            else:
+                printLines.append("│  ├──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
+        
+        for printLine in printLines:
+            print(printLine)
         
         if allClear:
             print("完了：全て正常終了")
