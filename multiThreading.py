@@ -44,20 +44,20 @@ def startProcessing():
         return
     
     #statusKeeper設定
-    sk = statusKeeper.statusKeeper(threading.Lock(),False)
+    sk = statusKeeper.statusKeeper(threading.Lock(),True)
 
     #dirList.csvを開いて、1行ずつ読み込み
-    f = open(dirListPath, 'r', encoding="utf-8")
+    f = open(dirListPath, 'r', encoding="CP932")
     dirListLines = f.readlines()[1:]
 
     organizers = []
     for dirIndex, dirListLine in enumerate(dirListLines):
         items = dirListLine.split(',')
-        name = f"{items[0]}_{items[1]}_{items[2]}_{dirIndex}"
+        name = items[0:3]
         rootPath = items[3]
         preservationStructure = items[4]
         preservationDays = items[5]
-        sk.appendStatus([items[0:3], "開始待機中", 0])
+        sk.appendStatus([name, "開始待機中", 0])
         organizers.append(dirOrganizer.organizer(name,
                                                  rootPath,
                                                  preservationStructure,
@@ -76,7 +76,7 @@ def startProcessing():
         if sk.displayStatus():
             break
 
-        time.sleep(0.2)
+        time.sleep(5)
 
     for thread in threads:
         thread.join()

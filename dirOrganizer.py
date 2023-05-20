@@ -27,9 +27,9 @@ class organizer():
         self.permanentPreservationDir = os.path.join(self.rootPath, "[_恒久保存用フォルダ_]")
 
         #logger生成
-        self.renameLogger = self.setupLogger(f"renamer_{self.name}","01_ログ_フォルダ移動履歴")
-        self.saveLogger = self.setupLogger(f"saver_{self.name}","02_ログ_ファイル保存履歴")
-        self.removeLogger = self.setupLogger(f"remover_{self.name}","03_ログ_フォルダ削除履歴")
+        self.renameLogger = self.setupLogger(f"【長期保存】_{self.name[2]}","01_ログ_フォルダ移動履歴")
+        self.saveLogger = self.setupLogger(f"【恒久保存】_{self.name[2]}","02_ログ_ファイル保存履歴")
+        self.removeLogger = self.setupLogger(f"【削除】_{self.name[2]}","03_ログ_フォルダ削除履歴")
     
     def setupLogger(self, logName, folderName):
         #----------------log設定----------------
@@ -41,14 +41,24 @@ class organizer():
         if not os.path.isdir(logRootDir):
             os.mkdir(logRootDir)
             
-        #ログフォルダ生成
-        localLogFolder = os.path.join(logRootDir,self.name)
-        if not os.path.isdir(localLogFolder):
-            os.mkdir(localLogFolder)
+        #ログフォルダ深度[0]生成
+        logRootDir = os.path.join(logRootDir,self.name[0])
+        if not os.path.isdir(logRootDir):
+            os.mkdir(logRootDir)
+            
+        #ログフォルダ深度[1]生成
+        logRootDir = os.path.join(logRootDir,self.name[1])
+        if not os.path.isdir(logRootDir):
+            os.mkdir(logRootDir)
+            
+        #ログフォルダ深度[2]生成
+        logRootDir = os.path.join(logRootDir,self.name[2])
+        if not os.path.isdir(logRootDir):
+            os.mkdir(logRootDir)
         
         #ロガーフォーマット#変数定義
         dateStamp = self.datetimeToday.strftime("%Y-%m-%d")
-        handler = logging.FileHandler(os.path.join(localLogFolder,dateStamp+".log"))
+        handler = logging.FileHandler(os.path.join(logRootDir,dateStamp+".log"))
         loggerFormat = logging.Formatter(
             '%(asctime)s:'
             '%(name)s:'
