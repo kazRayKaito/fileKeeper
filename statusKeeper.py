@@ -45,37 +45,78 @@ class statusKeeper():
         allDone = True
         allClear = True
         printLinesData = []
-        printLines = []
         for eachStatus in self.eachStatus:
-            printIt = True
             if eachStatus[2] == 0:
                 allDone = False
-            else:
-                printIt = False
             if eachStatus[2] != 1:
                 allClear = False
-            else:
-                printIt = False
-            if printIt:
-                printLinesData.append([eachStatus[0],eachStatus[1]])
 
-        for lineIndex, printLineData in enumerate(printLinesData):
-            if lineIndex == 0 or printLineData[0][0] != printLinesData[lineIndex - 1][0][0]:
-                printLines.append(f"{printLineData[0][0]}")
-            if lineIndex == 0 or printLineData[0][1] != printLinesData[lineIndex - 1][0][1]:
-                if lineIndex == len(printLinesData)-1:
-                    printLines.append(f"├──{printLineData[0][1]}")
-                elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
-                    printLines.append(f"├──{printLineData[0][1]}")
-                else:
-                    printLines.append(f"├──{printLineData[0][1]}")
-            if lineIndex == len(printLinesData)-1:
-                printLines.append("│  └──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
-            elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
-                printLines.append("│  └──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
-            else:
-                printLines.append("│  ├──{0:20}:{1}".format(printLineData[0][2],printLineData[1]))
+        for eachStatus in self.eachStatus:
+            if allDone or allClear or eachStatus[2] != 0 and eachStatus[2] != 1:
+                printLinesData.append([eachStatus[0],eachStatus[1]])
         
+        printLinesData.reverse()
+
+        firstLayer = [True, True]
+
+        printLines = []
+        for lineIndex, printLineData in enumerate(printLinesData):
+            if firstLayer[0]:
+                if firstLayer[1]:
+                    firstLayer[1] = False
+                    printLines.append("    └─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                else:
+                    printLines.append("    ├─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+            else:
+                if firstLayer[1]:
+                    firstLayer[1] = False
+                    printLines.append(" │  └─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                else:
+                    printLines.append(" │  ├─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+            if lineIndex == len(printLinesData)-1:
+                #最上層
+                if firstLayer[0]:
+                    printLines.append(f" └─{printLineData[0][1]}")
+                    printLines.append(f"{printLineData[0][0]}")
+                else:
+                    printLines.append(f" ├─{printLineData[0][1]}")
+                    printLines.append(f"{printLineData[0][0]}")
+            elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
+                #3列目最上層
+                firstLayer[1] = True
+                if firstLayer[0]:
+                    #2列目最下層
+                    firstLayer[0] = False
+                    printLines.append(f" └─{printLineData[0][1]}")
+                else:
+                    printLines.append(f" ├─{printLineData[0][1]}")
+                if printLineData[0][0] != printLinesData[lineIndex + 1][0][0]:
+                    printLines.append(f"{printLineData[0][0]}")
+                    printLines.append("")
+                    firstLayer[0] = True
+                else:
+                    printLines.append(" │")
+
+
+        #for lineIndex, printLineData in enumerate(printLinesData):
+        #    if lineIndex == 0 or printLineData[0][0] != printLinesData[lineIndex - 1][0][0]:
+        #        printLines.append(f"{printLineData[0][0]}")
+        #    if lineIndex == 0 or printLineData[0][1] != printLinesData[lineIndex - 1][0][1]:
+        #        if lineIndex == len(printLinesData)-1:
+        #            printLines.append(f"├──{printLineData[0][1]}")
+        #        elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
+        #            printLines.append(f"├──{printLineData[0][1]}")
+        #        else:
+        #            printLines.append(f"├──{printLineData[0][1]}")
+        #    if lineIndex == len(printLinesData)-1:
+        #        printLines.append("│  └──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+        #    elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
+        #        printLines.append("│  └──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+        #    else:
+        #        printLines.append("│  ├──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+        
+        printLines.reverse()
+
         for printLine in printLines:
             print(printLine)
         

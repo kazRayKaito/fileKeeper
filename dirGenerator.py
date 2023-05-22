@@ -128,7 +128,7 @@ def startProcessing():
         return
 
     #dirList.csvを開いて、1行ずつ読み込み
-    f = open(dirListPath, 'r', encoding="utf-8")
+    f = open(dirListPath, 'r', encoding="CP932")
     dirListLines = f.readlines()[1:]
 
     #フォルダ名取得

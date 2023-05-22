@@ -27,8 +27,8 @@ class organizer():
         self.permanentPreservationDir = os.path.join(self.rootPath, "[_恒久保存用フォルダ_]")
 
         #logger生成
-        self.renameLogger = self.setupLogger(f"【長期保存】_{self.name[2]}","01_ログ_フォルダ移動履歴")
-        self.saveLogger = self.setupLogger(f"【恒久保存】_{self.name[2]}","02_ログ_ファイル保存履歴")
+        self.renameLogger = self.setupLogger(f"【長期保存】_{self.name[2]}","01_ログ_フォルダ長期保存履歴")
+        self.saveLogger = self.setupLogger(f"【恒久保存】_{self.name[2]}","02_ログ_フォルダ恒久保存履歴")
         self.removeLogger = self.setupLogger(f"【削除】_{self.name[2]}","03_ログ_フォルダ削除履歴")
     
     def setupLogger(self, logName, folderName):
