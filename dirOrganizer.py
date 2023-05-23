@@ -102,7 +102,7 @@ class organizer():
             logger.error(f"処理中断:{be}")
             return []
         
-        return os.listdir(dirPath)
+        return dirList
 
     def getLatestDateinDir(self, dirPath):
         #ファイル/フォルダ一覧取得
