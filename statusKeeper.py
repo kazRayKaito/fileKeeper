@@ -45,6 +45,7 @@ class statusKeeper():
         allDone = True
         allClear = True
         printLinesData = []
+        gapLength = 0
         for eachStatus in self.eachStatus:
             if eachStatus[2] == 0:
                 allDone = False
@@ -54,25 +55,27 @@ class statusKeeper():
         for eachStatus in self.eachStatus:
             if allDone or allClear or eachStatus[2] != 0 and eachStatus[2] != 1:
                 printLinesData.append([eachStatus[0],eachStatus[1]])
+                gapLength = max(gapLength, len(eachStatus[0][2]))
         
         printLinesData.reverse()
 
         firstLayer = [True, True]
+        gapLength += 1
 
         printLines = []
         for lineIndex, printLineData in enumerate(printLinesData):
             if firstLayer[0]:
                 if firstLayer[1]:
                     firstLayer[1] = False
-                    printLines.append("    └─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                    printLines.append("    └─{name:<{length}}:{status}".format(name = printLineData[0][2], length = gapLength, status = printLineData[1]))
                 else:
-                    printLines.append("    ├─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                    printLines.append("    ├─{name:<{length}}:{status}".format(name = printLineData[0][2], length = gapLength, status = printLineData[1]))
             else:
                 if firstLayer[1]:
                     firstLayer[1] = False
-                    printLines.append(" │  └─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                    printLines.append(" │  └─{name:<{length}}:{status}".format(name = printLineData[0][2], length = gapLength, status = printLineData[1]))
                 else:
-                    printLines.append(" │  ├─{name:<40}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
+                    printLines.append(" │  ├─{name:<{length}}:{status}".format(name = printLineData[0][2], length = gapLength, status = printLineData[1]))
             if lineIndex == len(printLinesData)-1:
                 #最上層
                 if firstLayer[0]:
@@ -97,24 +100,6 @@ class statusKeeper():
                 else:
                     printLines.append(" │")
 
-
-        #for lineIndex, printLineData in enumerate(printLinesData):
-        #    if lineIndex == 0 or printLineData[0][0] != printLinesData[lineIndex - 1][0][0]:
-        #        printLines.append(f"{printLineData[0][0]}")
-        #    if lineIndex == 0 or printLineData[0][1] != printLinesData[lineIndex - 1][0][1]:
-        #        if lineIndex == len(printLinesData)-1:
-        #            printLines.append(f"├──{printLineData[0][1]}")
-        #        elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
-        #            printLines.append(f"├──{printLineData[0][1]}")
-        #        else:
-        #            printLines.append(f"├──{printLineData[0][1]}")
-        #    if lineIndex == len(printLinesData)-1:
-        #        printLines.append("│  └──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
-        #    elif printLineData[0][1] != printLinesData[lineIndex + 1][0][1]:
-        #        printLines.append("│  └──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
-        #    else:
-        #        printLines.append("│  ├──{name:<20}:{status}".format(name = printLineData[0][2],status = printLineData[1]))
-        
         printLines.reverse()
 
         for printLine in printLines:

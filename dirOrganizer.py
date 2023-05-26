@@ -422,19 +422,19 @@ class organizer():
                 self.checkEachFileAndDelete(os.path.join(self.longtermPreservationDir, monthlyFolder))
 
     def organize(self):
-        # フォルダの移動開始
-        self.renameLogger.info("----------------移動開始----------------:")
+        # フォルダの長期保存開始
+        self.renameLogger.info("----------------長期保存開始----------------:")
         self.renameLogger.info("対象フォルダ:"+self.rootPath)
         self.rename()
         if not self.checkStatusAlive(): return
-        self.renameLogger.info("----------------移動完了----------------:")
+        self.renameLogger.info("----------------長期保存完了----------------:")
 
         # 一部ファイルの恒久保存開始
-        self.saveLogger.info(  "----------------保存開始----------------:")
+        self.saveLogger.info(  "----------------恒久保存開始----------------:")
         self.saveLogger.info(  "対象フォルダ:"+self.rootPath)
         self.save()
         if not self.checkStatusAlive(): return
-        self.saveLogger.info(  "----------------保存完了----------------:")
+        self.saveLogger.info(  "----------------恒久保存完了----------------:")
 
         # フォルダの削除開始
         self.removeLogger.info("----------------削除開始----------------:")
