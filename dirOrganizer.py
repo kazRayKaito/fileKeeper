@@ -3,7 +3,6 @@ import sys
 import shutil
 import statusKeeper
 import logging
-import heapq
 import time
 import random
 import math
@@ -269,17 +268,37 @@ class organizer():
             
             #更新判断(10AMに近いファイルを更新)
             updateLatest = False
-            if self.saveFileList[day][2] == None:
+            if len(self.saveFileListList[day]) < self.preservationNumber:
                 updateLatest = True
-            elif abs(self.saveFileList[day][2]-100000) > abs(time-100000):
+            elif abs(self.saveFileListList[day][0][2]-100000) > abs(time-100000):
                 updateLatest = True
+                self.saveFileListList[day].pop(0)
             
-            #更新
+            #恒久保存ファイル一覧に追加
             if updateLatest:
-                self.saveFileList[day][0] = fileFullPath
-                self.saveFileList[day][1] = searchedFile
-                self.saveFileList[day][2] = time
-                self.saveFileList[day][3] = date
+                self.saveFileListList[day].append([fileFullPath, searchedFile, time, date])
+            
+            #恒久保存ファイル一覧をソート
+            fileLength = len(self.saveFileListList[day])
+            for index in reversed(range(fileLength)):
+                if index == 0:
+                    break
+                else:
+                    challengerDT =  abs(self.saveFileListList[day][index][2] - 100000)
+                    accepterDT =  abs(self.saveFileListList[day][index - 1][2] - 100000)
+                    if challengerDT > accepterDT:
+                        temp0 = self.saveFileListList[day][index][0]
+                        temp1 = self.saveFileListList[day][index][1]
+                        temp2 = self.saveFileListList[day][index][2]
+                        temp3 = self.saveFileListList[day][index][3]
+                        self.saveFileListList[day][index][0] = self.saveFileListList[day][index - 1][0]
+                        self.saveFileListList[day][index][1] = self.saveFileListList[day][index - 1][1]
+                        self.saveFileListList[day][index][2] = self.saveFileListList[day][index - 1][2]
+                        self.saveFileListList[day][index][3] = self.saveFileListList[day][index - 1][3]
+                        self.saveFileListList[day][index - 1][0] = temp0
+                        self.saveFileListList[day][index - 1][1] = temp1
+                        self.saveFileListList[day][index - 1][2] = temp2
+                        self.saveFileListList[day][index - 1][3] = temp3
         
         for searchDir in searchDirList:
             self.getTargetSaveFiles(os.path.join(targetFullDir,searchDir))
@@ -305,8 +324,8 @@ class organizer():
             self.updateStatus(f"[STEP2/3_恒久保存]_フォルダー一覧取得完_保存中:({targetDirIndex}/{targetDirCount})")
 
             #各フォルダで名前変更処理実行
-            self.saveFileList = []
-            [self.saveFileList.append([None, None, None, None]) for n in range(31)]
+            self.saveFileListList = []
+            [self.saveFileListList.append([]) for n in range(31)]
             self.getTargetSaveFiles(os.path.join(self.longtermPreservationDir,targetDir))
             
             #NASアクセス時間確認後、1ヶ月分を一度に保存
@@ -319,19 +338,16 @@ class organizer():
             self.saveLogger.info(f"-保存中-:{targetDir}")
 
             #全対象ファイル保存
-            for targetFile in self.saveFileList:
-                #対象ファイルがない場合はスキップ
-                if targetFile[0] == None:
-                    continue
-
-                #画像複製保存
-                destinPath = os.path.join(destinDir, f"{targetFile[3]}_{targetFile[1]}")
-                try:
-                    #TEST
-                    #time.sleep(math.floor(random.random()*10)/100)
-                    shutil.copyfile(targetFile[0], destinPath)
-                except BaseException as be:
-                    self.saveLogger.error(f"保存失敗:{be}")
+            for targetFileList in self.saveFileListList:
+                for targetFile in targetFileList:
+                    #画像複製保存
+                    destinPath = os.path.join(destinDir, f"{targetFile[3]}_{targetFile[2]}_{targetFile[1]}")
+                    try:
+                        #TEST
+                        #time.sleep(math.floor(random.random()*10)/100)
+                        shutil.copyfile(targetFile[0], destinPath)
+                    except BaseException as be:
+                        self.saveLogger.error(f"保存失敗:{be}")
 
     def removeDir(self, dirFullPath, dir):
         #NASへのアクセス許可時間帯確認

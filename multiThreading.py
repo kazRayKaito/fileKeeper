@@ -78,7 +78,7 @@ def startProcessing():
         if sk.displayStatus():
             break
 
-        time.sleep(10)
+        time.sleep(0.5)
 
     for thread in threads:
         thread.join()

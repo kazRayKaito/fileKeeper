@@ -5,10 +5,10 @@ DivA,SubAA,Div2,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\
 DivA,SubAA,Div3,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir4,data,2,558
 DivA,SubAB,Div4,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir5,data,3,
 DivA,SubAB,Div5,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir6,data,4,558
-DivA,SubAB,Div6,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir7,data,,558
-DivA,SubAB,Div7,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir8,data,,558
-DivB,SubBA,Div8,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir9,date,,558
-DivB,SubBA,Div9,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir10,month,,558
-DivC,SubCA,Div10,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir11, ,,558
+DivA,SubAB,Div6,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir7,data,5,558
+DivA,SubAB,Div7,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir8,data,6,558
+DivB,SubBA,Div8,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir9,date,7,558
+DivB,SubBA,Div9,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir10,month,8,558
+DivC,SubCA,Div10,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir11, ,9,558
 DivC,SubCB,Div11,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir12,,,558
 DivD,subCA,Diva,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir13,,,558

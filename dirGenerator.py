@@ -70,7 +70,26 @@ def generate(rootDir):
             "fileD.txt",
             "fileE.txt",
             "fileF.txt",
-            "fileG.txt"]
+            "fileG.txt",
+            "fileH.txt",
+            "fileI.txt",
+            "fileJ.txt",
+            "fileK.txt",
+            "fileL.txt",
+            "fileM.txt",
+            "fileN.txt",
+            "fileO.txt",
+            "fileP.txt",
+            "fileQ.txt",
+            "fileR.txt",
+            "fileS.txt",
+            "fileT.txt",
+            "fileU.txt",
+            "fileV.txt",
+            "fileW.txt",
+            "fileX.txt",
+            "fileY.txt",
+            "fileZ.txt"]
     
     #親フォルダがない場合はエラーで終了
     if os.path.isdir(os.path.dirname(rootDir)) == False:
