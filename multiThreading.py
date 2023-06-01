@@ -44,7 +44,7 @@ def startProcessing():
         return
     
     #statusKeeper設定
-    sk = statusKeeper.statusKeeper(threading.Lock(),True)
+    sk = statusKeeper.statusKeeper(threading.Lock(),False)
 
     #dirList.csvを開いて、1行ずつ読み込み
     f = open(dirListPath, 'r', encoding="CP932")
@@ -78,7 +78,7 @@ def startProcessing():
         if sk.displayStatus():
             break
 
-        time.sleep(5)
+        time.sleep(10)
 
     for thread in threads:
         thread.join()

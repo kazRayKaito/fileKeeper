@@ -38,7 +38,11 @@ class statusKeeper():
             self.eachStatus[statusIndex][2] = newStatus    
         self.lock.release()
 
-    def checkStatus(self, statusIndex): return self.eachStatus[statusIndex][2]
+    def checkStatus(self, statusIndex):
+        self.lock.acquire()
+        status = self.eachStatus[statusIndex][2]
+        self.lock.release()
+        return status
 
     def displayStatus(self):
         os.system('cls')
@@ -46,6 +50,8 @@ class statusKeeper():
         allClear = True
         printLinesData = []
         gapLength = 0
+        
+        self.lock.acquire()
         for eachStatus in self.eachStatus:
             if eachStatus[2] == 0:
                 allDone = False
@@ -53,9 +59,10 @@ class statusKeeper():
                 allClear = False
 
         for eachStatus in self.eachStatus:
-            if allDone or allClear or eachStatus[2] != 0 and eachStatus[2] != 1:
+            if allDone or allClear or eachStatus[2] == 0:
                 printLinesData.append([eachStatus[0],eachStatus[1]])
                 gapLength = max(gapLength, len(eachStatus[0][2]))
+        self.lock.release()
         
         printLinesData.reverse()
 

@@ -31,7 +31,7 @@ class organizer():
         else:
             self.preservationNumber = int(self.preservationNumber)
 
-        if self.preservationDays == "":
+        if self.preservationDays == "" or self.preservationDays == "\n":
             #空白の場合は、長期保存日数は558日(1.5年)
             self.preservationDays = 558
         else:
