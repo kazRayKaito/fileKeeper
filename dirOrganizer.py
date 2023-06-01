@@ -3,6 +3,7 @@ import sys
 import shutil
 import statusKeeper
 import logging
+import heapq
 import time
 import random
 import math
@@ -13,14 +14,28 @@ from datetime import timedelta as td
 sys.dont_write_bytecode = True
 
 class organizer():
-    def __init__(self, name, rootPath, preservationStructure, preservationDays, eachStatusIndex, sk: statusKeeper.statusKeeper):
+    def __init__(self, name, rootPath, preservationStructure, preservationNumber, preservationDays, eachStatusIndex, sk: statusKeeper.statusKeeper):
         #----------------変数定義----------------
         self.name = name
         self.rootPath = rootPath
         self.preservationStructure = preservationStructure
+        self.preservationNumber = preservationNumber
         self.preservationDays = preservationDays
         self.eachStatusIndex = eachStatusIndex
         self.sk = sk
+
+        #----------------変数確認----------------
+        if self.preservationNumber == "":
+            #空白の場合は、恒久保存数は0枚
+            self.preservationNumber = 0
+        else:
+            self.preservationNumber = int(self.preservationNumber)
+
+        if self.preservationDays == "":
+            #空白の場合は、長期保存日数は558日(1.5年)
+            self.preservationDays = 558
+        else:
+            self.preservationDays = int(self.preservationDays)
 
         self.datetimeToday = dt.now()
         self.longtermPreservationDir = os.path.join(self.rootPath, "[_長期保存用フォルダ_]")
@@ -269,7 +284,11 @@ class organizer():
         for searchDir in searchDirList:
             self.getTargetSaveFiles(os.path.join(targetFullDir,searchDir))
 
-    def save(self):        
+    def save(self):
+        #恒久保存枚数確認、0ならスキップ
+        if self.preservationNumber == 0:
+            return
+        
         #長期保存用フォルダの有無確認
         self.isdir(self.longtermPreservationDir, self.saveLogger)
         if not self.checkStatusAlive(): return
@@ -343,7 +362,7 @@ class organizer():
             filePath = os.path.join(dirPath,file)
             createdTime = os.path.getctime(filePath)
             deltaDays = (self.datetimeToday - dt.fromtimestamp(createdTime)).days
-            if deltaDays > int(self.preservationDays):
+            if deltaDays > self.preservationDays:
                 try:
                     #TEST
                     #time.sleep(math.floor(random.random()*10)/100)
@@ -374,14 +393,13 @@ class organizer():
         self.isdir(self.longtermPreservationDir, self.removeLogger)
 
         #保存期間日数が適切か確認
-        preservationDays = int(self.preservationDays)
-        if not ((preservationDays > 547) and (preservationDays < 7300)):
-            self.removeLogger.error("削除中断_保存日数設定が 547日未満")
-            self.updateStatus("削除中断_保存日数設定が547日未満", -1)
+        if not ((self.preservationDays >= 0) and (self.preservationDays <= 7300)):
+            self.removeLogger.error("削除中断_保存日数設定が 0~7300ではない")
+            self.updateStatus("削除中断_保存日数設定が 0~7300ではない", -1)
             return
 
         #保存限界の日付から削除不可能かつ最も古いフォルダ名取得
-        preservationLimit = self.datetimeToday - td(days = preservationDays)
+        preservationLimit = self.datetimeToday - td(days = self.preservationDays)
         preservationLimitFolderName = format(preservationLimit,"%Y-%m")
         
         #長期保存用フォルダ内のフォルダ一覧取得(事前に時刻確認)

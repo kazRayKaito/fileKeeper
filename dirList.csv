@@ -1,7 +1,14 @@
-å¤§åˆ†é¡,ä¸­åˆ†é¡,å°åˆ†é¡,ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹,é•·æœŸä¿å­˜ç”¨ãƒ•ã‚©ãƒ«ãƒ€æ§‹é€ ("date"ã§æ—¥åˆ¥),ä¿å­˜æ—¥æ•°(558=31æ—¥*18ã‚«æœˆ),
-DivA,SubA,Det1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir1,date,558
-DivA,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir2,data,558
-DivB,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir3,date,558
-DivB,SubA,Div2,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir4,month,558
-DivC,SubA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir5, ,558
-DivC,SubB,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir6,,558
+‘å•ª—Ş,’†•ª—Ş,¬•ª—Ş,ƒtƒHƒ‹ƒ_ƒpƒX,"’·Šú•Û‘¶—pƒtƒHƒ‹ƒ_\‘¢[""date""‚Å“ú•Ê‚ÉƒtƒHƒ‹ƒ_¶¬]",P‹v•Û‘¶–‡”[‹ó”’‚Í0],•Û‘¶“ú”[‹ó”’‚Í558“ú(1.5”N)A0`7300(20”N)‚Å‚ ‚é‚±‚Æ]
+DivZ,subCA,Diva,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir1,,,558
+DivA,SubAA,Div1,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir2,date,0,558
+DivA,SubAA,Div2,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir3,data,1,558
+DivA,SubAA,Div3,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir4,data,2,558
+DivA,SubAB,Div4,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir5,data,3,
+DivA,SubAB,Div5,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir6,data,4,558
+DivA,SubAB,Div6,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir7,data,,558
+DivA,SubAB,Div7,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir8,data,,558
+DivB,SubBA,Div8,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir9,date,,558
+DivB,SubBA,Div9,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir10,month,,558
+DivC,SubCA,Div10,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir11, ,,558
+DivC,SubCB,Div11,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir12,,,558
+DivD,subCA,Diva,C:\Users\Kazuk\Documents\2_Projects\VSCode\fileKeeperDirExample\dir13,,,558
