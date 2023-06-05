@@ -4,37 +4,42 @@ import sys
 import time
 from datetime import datetime as dt
 sys.dont_write_bytecode = True
-
-#日付取得
-datetimeToday = dt.now()
-dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
-
-#ロガー設定
 import logging
-logger = logging.getLogger("main")
-logger.setLevel(logging.DEBUG)
-
-#ログフォルダ生成
-logFolder = os.path.join(os.getcwd(),"10_ログ_異常履歴")
-if not os.path.isdir(logFolder):
-    os.mkdir(logFolder)
-
-#ロガーフォーマット
-errorHandler = logging.FileHandler(os.path.join(logFolder,dateStamp+".log"))
-fmt = logging.Formatter(
-    '%(asctime)s:'
-    '%(name)s:'
-    '%(levelname)s:'
-    '%(message)s'
-)
-errorHandler.setFormatter(fmt)
-errorHandler.setLevel(logging.ERROR)
-logger.addHandler(errorHandler)
-
-#モジュールインポート
 import statusKeeper
 import dirOrganizer
 import threading
+
+def main():
+    #日付取得
+    datetimeToday = dt.now()
+    dateStamp = datetimeToday.strftime("%Y-%m-%d") #("%Y-%m-%d_%H-%M-%S")
+
+    #ロガー設定
+
+    logger = logging.getLogger("main")
+    logger.setLevel(logging.DEBUG)
+
+    #ログフォルダ生成
+    logFolder = os.path.join(os.getcwd(),"10_ログ_異常履歴")
+    if not os.path.isdir(logFolder):
+        os.mkdir(logFolder)
+
+    #ロガーフォーマット
+    errorHandler = logging.FileHandler(os.path.join(logFolder,dateStamp+".log"))
+    fmt = logging.Formatter(
+        '%(asctime)s:'
+        '%(name)s:'
+        '%(levelname)s:'
+        '%(message)s'
+    )
+    errorHandler.setFormatter(fmt)
+    errorHandler.setLevel(logging.ERROR)
+    logger.addHandler(errorHandler)
+
+    #プロセスを開始
+    logger.debug("running as main")
+    startProcessing()
+
 
 def startProcessing():
     #dirListの場所確認
@@ -85,6 +90,5 @@ def startProcessing():
 
 #----------------------------------実行----------------------------------
 if __name__ == "__main__":
-    logger.debug("running as main")
-    startProcessing()
+    main()
 #----------------------------------実行----------------------------------
