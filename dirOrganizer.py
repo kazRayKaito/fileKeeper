@@ -264,13 +264,13 @@ class organizer():
             createdTime = os.path.getctime(fileFullPath)
             date = format(dt.fromtimestamp(createdTime),"%Y-%m-%d")
             day = int(format(dt.fromtimestamp(createdTime),"%d")) - 1
-            time = int(format(dt.fromtimestamp(createdTime),"%H%M%S"))
+            time = format(dt.fromtimestamp(createdTime),"%H%M%S")
             
             #更新判断(10AMに近いファイルを更新)
             updateLatest = False
             if len(self.saveFileListList[day]) < self.preservationNumber:
                 updateLatest = True
-            elif abs(self.saveFileListList[day][0][2]-100000) > abs(time-100000):
+            elif abs(int(self.saveFileListList[day][0][2])-100000) > abs(int(time)-100000):
                 updateLatest = True
                 self.saveFileListList[day].pop(0)
             
@@ -284,8 +284,8 @@ class organizer():
                 if index == 0:
                     break
                 else:
-                    challengerDT =  abs(self.saveFileListList[day][index][2] - 100000)
-                    accepterDT =  abs(self.saveFileListList[day][index - 1][2] - 100000)
+                    challengerDT =  abs(int(self.saveFileListList[day][index][2]) - 100000)
+                    accepterDT =  abs(int(self.saveFileListList[day][index - 1][2]) - 100000)
                     if challengerDT > accepterDT:
                         temp0 = self.saveFileListList[day][index][0]
                         temp1 = self.saveFileListList[day][index][1]
